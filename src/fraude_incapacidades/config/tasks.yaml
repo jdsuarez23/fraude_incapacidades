@@ -1,57 +1,112 @@
 extract_and_validate_task:
   description: >
-    Ejecuta los siguientes pasos de análisis sobre el archivo: {file_path}
+    PASO 1 — EXTRACCIÓN Y ANÁLISIS FORENSE DEL DOCUMENTO
     
-    1. VALIDACIÓN DE CÓDIGOS CIE: Extrae el texto del archivo e identifica el diagnóstico.
-       Crúzalo conceptualmente con la base CIE-10/CIE-11. Verifica si el número de días
-       de incapacidad es coherente con los protocolos de medicina laboral para ese diagnóstico.
+    Archivo a analizar: {file_path}
     
-    2. VERIFICACIÓN DE ENTIDADES Y REGISTRO: Verifica la consistencia del EPS/IPS
-       y si la estructura visual y nombres corresponden. 
+    Ejecuta los siguientes pasos EN ORDEN:
     
-    3. ANÁLISIS DE INTEGRIDAD DEL ARCHIVO: Extrae y revisa metadatos técnicos y
-       la capa visual. Busca rastros de edición (Adobe Acrobat, herramientas IA, edición
-       de capas, parches de texto, saltos de tipografía en nombre, fechas y cédula).
+    A) EXTRACCIÓN FORENSE: Usa la herramienta "Extraccion Forense PDF" pasándole
+       exactamente la ruta del archivo: {file_path}
+       Esto te dará el texto extraído, los metadatos del PDF, las fuentes y alertas automáticas.
     
-    4. CONSISTENCIA DE IDENTIDAD: Verifica si la estructura del nombre y cédula
-       siguen los patrones colombianos estandarizados (ADRES/RUES).
+    B) IDENTIFICACIÓN DE DATOS: Del texto extraído, identifica:
+       - Nombre completo del paciente
+       - Número de cédula/documento del paciente
+       - Diagnóstico y código CIE-10 (si aparece)
+       - Días de incapacidad otorgados
+       - Fecha de inicio y fin de la incapacidad
+       - Nombre del médico que firma
+       - Cédula o registro médico del firmante
+       - EPS o IPS emisora
+       - Cualquier otro dato relevante
     
-    * Señala CADA ANOMALÍA detectada como "Alerta de Riesgo".
-    * No des por sentado NADA. Sé escéptico.
+    C) VALIDACIÓN CIE-10: Si encontraste un código CIE-10, usa la herramienta
+       "Validacion CIE-10" pasándole un JSON con los campos:
+       {"codigo": "CÓDIGO_AQUÍ", "diagnostico_texto": "DIAGNÓSTICO_AQUÍ", "dias_incapacidad": NUMERO}
+    
+    D) ANÁLISIS DE INTEGRIDAD: Revisa los metadatos del PDF:
+       - ¿Qué software creó el documento? (sistemas hospitalarios vs Word/Canva/Adobe)
+       - ¿Las fechas de creación y modificación coinciden?
+       - ¿Cuántas fuentes tipográficas distintas hay? (más de 3-4 es sospechoso)
+       - ¿Hay alertas forenses automáticas?
+    
+    Señala CADA ANOMALÍA como "⚠️ ALERTA DE RIESGO".
+    Sé ESCÉPTICO. No asumas que el documento es real.
+    
   expected_output: >
-    Datos brutos forenses, resumen de validaciones médicas, alertas de riesgo encontradas
-    y evaluación de consistencia de los documentos extraídos.
+    Un reporte detallado con: datos del paciente extraídos, datos del médico,
+    resultado de validación CIE-10, análisis de metadatos forenses, y lista
+    de todas las alertas de riesgo encontradas.
   agent: auditor_medico_forense
 
-search_osint_task:
+search_and_verify_task:
   description: >
-    Basado en la IPS, la EPS o los médicos identificados en la tarea anterior, realiza una
-    búsqueda en la Web usando la herramienta proveída.
-    Busca si el "formato x" o "clínica y" tienen reportes de fraude, venta de incapacidades falsas
-    o suplantaciones en Colombia.
+    PASO 2 — VERIFICACIÓN DE ENTIDADES Y BÚSQUEDA OSINT
+    
+    Con base en los datos extraídos por el agente anterior, ejecuta:
+    
+    A) VERIFICACIÓN RETHUS: Si tienes el número de cédula del médico firmante,
+       usa la herramienta "Verificacion RETHUS SISPRO" pasándole un JSON:
+       {"tipo_documento": "CC", "numero_documento": "NÚMERO_CÉDULA_MÉDICO"}
+       Esto verificará si el médico está registrado en el sistema de salud colombiano.
+    
+    B) VERIFICACIÓN ADRES: Si tienes el número de cédula del paciente,
+       usa la herramienta "Verificacion ADRES BDUA" pasándole un JSON:
+       {"tipo_documento": "CC", "numero_documento": "NÚMERO_CÉDULA_PACIENTE"}
+       Esto verificará si el paciente está afiliado al sistema de salud.
+    
+    C) BÚSQUEDA OSINT: Usa la herramienta "Busqueda Web OSINT" para buscar
+       información sobre la EPS/IPS mencionada en el documento.
+       Busca reportes de fraude, venta de incapacidades falsas o suplantación.
+    
+    Si NO tienes algún dato (cédula del médico o paciente), indica que no fue
+    posible extraerlo del documento y marca eso como una alerta adicional.
+    
   expected_output: >
-    Resultados de la búsqueda web aplicados al análisis de riesgo de esta incapacidad.
-    Indica si hubo confirmación en línea de algún indicio de fraude previo.
+    Resultados de RETHUS (verificación del médico), resultados de ADRES
+    (verificación del paciente), y hallazgos de búsqueda web OSINT sobre
+    la entidad de salud.
   agent: investigador_osint
 
 generate_final_report_task:
   description: >
-    Usa la información recopilada por la auditoría forense general y el OSINT web
-    para generar el informe final exacto requerido.
-    El informe DEBE MANTENER estrictamente la privacidad (Ley de Protección de Datos/Habeas Data)
-    usando formatos semi-ocultos si es información supremamente sensible, pero 
-    debe entregar el dictamen.
+    PASO 3 — GENERAR INFORME FINAL EN JSON
     
-    Presenta EXCLUSIVAMENTE la siguiente estructura:
+    Consolida TODA la información de los pasos anteriores y genera
+    EXCLUSIVAMENTE un JSON válido con esta estructura EXACTA:
     
-    [Puntaje de Veracidad] (0% al 100%)
+    {
+      "puntaje_veracidad": <número de 0 a 100>,
+      "hallazgos_medicos": "<texto describiendo el diagnóstico CIE-10, coherencia de días y hallazgos médicos>",
+      "analisis_forense": "<texto describiendo metadatos, software creador, fuentes, señales de edición>",
+      "verificacion_entidades": "<texto describiendo resultados de RETHUS, ADRES y OSINT>",
+      "alertas": ["alerta 1", "alerta 2", "..."],
+      "veredicto": "<Válida|Sospechosa|Fraudulenta>"
+    }
     
-    [Hallazgos Médicos] (Reporta el CIE y la coherencia de los días de incapacidad)
+    REGLAS PARA EL PUNTAJE:
+    - Empieza en 100% y resta puntos por cada anomalía:
+      - Código CIE-10 no encontrado o incoherente: -15 a -25 pts
+      - Médico no verificado en RETHUS: -15 a -20 pts
+      - Paciente no verificado en ADRES: -10 pts
+      - Metadatos sospechosos (software no hospitalario): -10 a -20 pts
+      - Múltiples fuentes tipográficas: -10 pts
+      - Fechas de creación/modificación diferentes: -10 pts
+      - Reportes de fraude OSINT encontrados: -15 a -25 pts
+      - Datos del documento incompletos o ilegibles: -5 a -10 pts
     
-    [Análisis Forense] (Reporta detección de edición/IA, metadatos, tipografía, parches)
+    - Veredicto final:
+      - 80-100: "Válida"
+      - 40-79: "Sospechosa"  
+      - 0-39: "Fraudulenta"
     
-    [Veredicto Final] (SOLO UNA PALABRA: Válida, Sospechosa o Fraudulenta)
+    CUMPLE la Ley 1581/2012 (Habeas Data): redacta los datos personales
+    de forma semi-oculta (ej: "J*** D*** G***") en el informe.
+    
+    IMPORTANTE: Tu respuesta debe ser SOLO el JSON, sin texto antes ni después.
+    
   expected_output: >
-    Un informe en texto plano que contiene única y exclusivamente el formato
-    estructurado indicado arriba, sin preámbulos.
+    Un JSON válido con exactamente los campos: puntaje_veracidad, hallazgos_medicos,
+    analisis_forense, verificacion_entidades, alertas, veredicto.
   agent: redactor_dictamen

@@ -178,3 +178,79 @@ ModuleNotFoundError: No module named 'fraude_incapacidades'
 [DEBUG] OPENAI_API_KEY length: 164, starts with: sk-pr
 [DEBUG] OPENAI_API_KEY present: True
 [DEBUG] OPENAI_API_KEY length: 164, starts with: sk-pr
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"tipo_documento": "CC", "numero_documento": "123456789"}, {"tipo_documento": "CC", "numero_documento": "987654321"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"input_data": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"987654321\"}"}, {"afiliado": true, "estado": "Activo", "eps": "EPS Confiar", "regimen": "Contributivo", "fuente": "ADRES/BDUA"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+[94mRepaired JSON: [{"input_data": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"987654321\"}"}, {"afiliado": true, "estado": "Activo", "eps": "EPS Confiar", "regimen": "Contributivo", "fuente": "ADRES/BDUA"}, {"query": "Salud Vital IPS fraude suplantaciu00f3n venta incapacidades falsas"}][0m
+D:\proyectos_tech\fraude_incapacidades\src\fraude_incapacidades\tools\search_tool.py:30: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  results = DDGS().text(search_query, max_results=3)
+D:\proyectos_tech\fraude_incapacidades\src\fraude_incapacidades\tools\search_tool.py:30: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  results = DDGS().text(search_query, max_results=3)
+D:\proyectos_tech\fraude_incapacidades\src\fraude_incapacidades\tools\search_tool.py:30: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  results = DDGS().text(search_query, max_results=3)
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='He compl...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='I now ca...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='I now ca...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='```\nTho...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='```\nTho...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='```\nTho...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='```\nTho...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='```\nTho...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='```\nTho...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='Parece q...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='Parece q...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='No puedo...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='No puedo...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='I now ca...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(
+D:\proyectos_tech\fraude_incapacidades\.venv\Lib\site-packages\pydantic\main.py:464: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected 9 fields but got 6: Expected `Message` - serialized value may not be as expected [field_name='message', input_value=Message(content='I now ca...: None}, annotations=[]), input_type=Message])
+  PydanticSerializationUnexpectedValue(Expected `StreamingChoices` - serialized value may not be as expected [field_name='choices', input_value=Choices(finish_reason='st...ider_specific_fields={}), input_type=Choices])
+  return self.__pydantic_serializer__.to_python(

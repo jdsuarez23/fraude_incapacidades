@@ -1,10 +1,153 @@
 import React, { useState } from 'react';
 
+/* ─── Verdict Badge colors ─── */
+const verdictConfig = {
+  'Válida': { bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.4)', color: '#34D399', icon: '✓', label: 'DOCUMENTO VÁLIDO' },
+  'Sospechosa': { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.4)', color: '#FBBF24', icon: '⚠', label: 'DOCUMENTO SOSPECHOSO' },
+  'Fraudulenta': { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.4)', color: '#F87171', icon: '✕', label: 'DOCUMENTO FRAUDULENTO' },
+};
+
+/* ─── Score ring color ─── */
+function getScoreColor(score) {
+  if (score >= 80) return '#10B981';
+  if (score >= 40) return '#F59E0B';
+  return '#EF4444';
+}
+
+/* ─── Circular Score Gauge ─── */
+function ScoreGauge({ score }) {
+  const color = getScoreColor(score);
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (score / 100) * circumference;
+
+  return (
+    <div style={{ position: 'relative', width: '160px', height: '160px', margin: '0 auto' }}>
+      <svg viewBox="0 0 120 120" width="160" height="160">
+        <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+        <circle cx="60" cy="60" r="54" fill="none" stroke={color} strokeWidth="8"
+          strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset}
+          transform="rotate(-90 60 60)"
+          style={{ transition: 'stroke-dashoffset 1.5s ease-out, stroke 0.5s ease' }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: '2.8rem', fontWeight: 900, color, lineHeight: 1, fontFamily: "'Inter', system-ui" }}>{score}</span>
+        <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '4px' }}>Veracidad</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Report Section Card ─── */
+function ReportSection({ icon, title, children, delay = 0 }) {
+  return (
+    <div className="glass" style={{
+      borderRadius: '16px', padding: '24px', marginBottom: '16px',
+      opacity: 0, animation: `fadeUp 0.6s ease-out ${delay}s forwards`
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '10px',
+          background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
+          flexShrink: 0
+        }}>{icon}</div>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>{title}</h3>
+      </div>
+      <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.88rem', lineHeight: 1.7 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Alert Item ─── */
+function AlertItem({ text }) {
+  return (
+    <div style={{
+      display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '10px 14px',
+      background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)',
+      borderRadius: '10px', marginBottom: '8px'
+    }}>
+      <span style={{ color: '#F87171', fontSize: '1rem', flexShrink: 0, marginTop: '1px' }}>⚠</span>
+      <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', lineHeight: 1.6 }}>{text}</span>
+    </div>
+  );
+}
+
+/* ─── Verdict Badge ─── */
+function VerdictBadge({ verdict }) {
+  const cfg = verdictConfig[verdict] || verdictConfig['Sospechosa'];
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+      padding: '32px', borderRadius: '20px', background: cfg.bg,
+      border: `2px solid ${cfg.border}`,
+      opacity: 0, animation: 'fadeUp 0.6s ease-out 0.8s forwards'
+    }}>
+      <div style={{
+        width: '64px', height: '64px', borderRadius: '50%', background: cfg.bg,
+        border: `2px solid ${cfg.border}`, display: 'flex', alignItems: 'center',
+        justifyContent: 'center', fontSize: '2rem', color: cfg.color,
+        boxShadow: `0 0 30px ${cfg.border}`
+      }}>{cfg.icon}</div>
+      <span style={{
+        fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.15em',
+        textTransform: 'uppercase', color: cfg.color
+      }}>{cfg.label}</span>
+    </div>
+  );
+}
+
+/* ─── Structured Report ─── */
+function StructuredReport({ report }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* Score + Verdict Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '8px' }}>
+        <div className="glass" style={{
+          borderRadius: '20px', padding: '32px', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          opacity: 0, animation: 'fadeUp 0.6s ease-out 0.1s forwards'
+        }}>
+          <ScoreGauge score={report.puntaje_veracidad} />
+          <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '12px', fontWeight: 500 }}>
+            Puntaje de Veracidad
+          </span>
+        </div>
+        <VerdictBadge verdict={report.veredicto} />
+      </div>
+
+      {/* Detail Sections */}
+      <ReportSection icon="🏥" title="Hallazgos Médicos" delay={0.2}>
+        <p style={{ whiteSpace: 'pre-wrap' }}>{report.hallazgos_medicos || 'No disponible'}</p>
+      </ReportSection>
+
+      <ReportSection icon="🔬" title="Análisis Forense Digital" delay={0.35}>
+        <p style={{ whiteSpace: 'pre-wrap' }}>{report.analisis_forense || 'No disponible'}</p>
+      </ReportSection>
+
+      <ReportSection icon="🔍" title="Verificación de Entidades" delay={0.5}>
+        <p style={{ whiteSpace: 'pre-wrap' }}>{report.verificacion_entidades || 'No disponible'}</p>
+      </ReportSection>
+
+      {/* Alerts */}
+      {report.alertas && report.alertas.length > 0 && (
+        <ReportSection icon="🚨" title={`Alertas de Riesgo (${report.alertas.length})`} delay={0.65}>
+          {report.alertas.map((a, i) => <AlertItem key={i} text={a} />)}
+        </ReportSection>
+      )}
+    </div>
+  );
+}
+
+
 export default function App() {
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(null);     // StructuredReport object
+  const [rawReport, setRawReport] = useState('');  // Fallback raw text
   const [error, setError] = useState(null);
 
   const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -19,15 +162,21 @@ export default function App() {
 
   const analyzeFile = async () => {
     if (!file) return;
-    setIsLoading(true); setResult(null); setError(null);
+    setIsLoading(true); setResult(null); setRawReport(''); setError(null);
     const formData = new FormData();
     formData.append('file', file);
     try {
       const res = await fetch('http://localhost:8000/api/analyze', { method: 'POST', body: formData });
       if (!res.ok) throw new Error(`Error del servidor: ${res.status}`);
       const data = await res.json();
-      if (data.status === 'success') setResult(data.report);
-      else setError(data.error || 'Error desconocido en el análisis.');
+      if (data.status === 'success') {
+        if (data.report) {
+          setResult(data.report);
+        }
+        setRawReport(data.raw_report || '');
+      } else {
+        setError(data.error || 'Error desconocido en el análisis.');
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,11 +184,7 @@ export default function App() {
     }
   };
 
-  const getReportText = (r) => {
-    if (!r) return '';
-    if (typeof r === 'string') return r;
-    return r.raw || r.output || JSON.stringify(r, null, 2);
-  };
+  const resetAll = () => { setFile(null); setResult(null); setRawReport(''); setError(null); };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg-abyss)', color: 'var(--color-text-primary)', fontFamily: 'Inter, system-ui, sans-serif', position: 'relative', overflowX: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -80,7 +225,7 @@ export default function App() {
         {/* Hero */}
         <div className="animate-fade-up" style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{ display: 'inline-block', padding: '4px 16px', borderRadius: '999px', border: '1px solid rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.08)', color: 'var(--color-accent-300)', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '24px' }}>
-            Sistema de Auditoría Forense
+            Sistema de Auditoría Forense v2.0
           </div>
           <h1 className="text-gradient-primary" style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, margin: '0 0 20px 0' }}>
             Validador Forense<br />
@@ -93,7 +238,7 @@ export default function App() {
 
         {/* Feature chips */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginBottom: '40px' }}>
-          {['Validación CIE-10', 'Análisis Forense PDF', 'RETHUS / ADRES', 'Detección Fraude IA', 'Informe Estructurado'].map(f => (
+          {['Validación CIE-10', 'Análisis Forense PDF', 'Verificación RETHUS', 'Consulta ADRES', 'OSINT Web', 'Informe Estructurado'].map(f => (
             <span key={f} style={{ padding: '6px 16px', borderRadius: '999px', background: 'var(--color-bg-elevated)', border: '1px solid rgba(255,255,255,0.07)', color: 'var(--color-text-secondary)', fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.03em' }}>
               ◈ {f}
             </span>
@@ -170,12 +315,12 @@ export default function App() {
 
           {isLoading && (
             <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.85rem', maxWidth: '380px', lineHeight: 1.6 }}>
-              <span style={{ color: 'var(--color-accent-400)', fontWeight: 600 }}>5 agentes especializados</span> están verificando el documento en paralelo. El proceso tarda entre <strong style={{ color: 'var(--color-text-primary)' }}>30 y 90 segundos</strong>.
+              <span style={{ color: 'var(--color-accent-400)', fontWeight: 600 }}>3 agentes especializados</span> verifican el documento secuencialmente: extracción forense, verificación RETHUS/ADRES/OSINT y generación del informe. El proceso tarda entre <strong style={{ color: 'var(--color-text-primary)' }}>30 y 120 segundos</strong>.
             </div>
           )}
 
           {file && !isLoading && (
-            <button onClick={() => { setFile(null); setResult(null); setError(null); }}
+            <button onClick={resetAll}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '0.85rem', textDecoration: 'underline' }}>
               Cancelar y elegir otro archivo
             </button>
@@ -197,8 +342,21 @@ export default function App() {
           </div>
         )}
 
-        {/* ── RESULT REPORT ── */}
+        {/* ── STRUCTURED RESULT REPORT ── */}
         {result && (
+          <div className="animate-fade-up" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ width: '3px', height: '36px', background: 'linear-gradient(180deg, var(--color-accent-500), #7C3AED)', borderRadius: '999px' }} />
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                Informe <span className="text-gradient-accent">Forense</span>
+              </h2>
+            </div>
+            <StructuredReport report={result} />
+          </div>
+        )}
+
+        {/* ── RAW FALLBACK REPORT ── */}
+        {!result && rawReport && (
           <div className="animate-fade-up" style={{ width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
               <div style={{ width: '3px', height: '36px', background: 'linear-gradient(180deg, var(--color-accent-500), #7C3AED)', borderRadius: '999px' }} />
@@ -209,7 +367,7 @@ export default function App() {
             <div className="report-panel glass" style={{ padding: '40px 40px' }}>
               <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '300px', height: '300px', background: 'var(--color-accent-500)', borderRadius: '50%', filter: 'blur(120px)', opacity: 0.06, pointerEvents: 'none' }} />
               <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace", fontSize: '0.9rem', lineHeight: 1.8, color: 'var(--color-text-secondary)', position: 'relative', zIndex: 1 }}>
-                {getReportText(result)}
+                {rawReport}
               </pre>
             </div>
           </div>
@@ -218,12 +376,16 @@ export default function App() {
 
       {/* Footer */}
       <footer style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.78rem', zIndex: 10, position: 'relative' }}>
-        SaludGuard AI · Análisis forense de incapacidades médicas Colombia (SGSSS) · Protegido por Ley 1581/2012
+        SaludGuard AI v2.0 · Auditoría forense de incapacidades médicas Colombia (SGSSS) · Protegido por Ley 1581/2012
       </footer>
 
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
       `}</style>

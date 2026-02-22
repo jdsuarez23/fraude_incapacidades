@@ -11,7 +11,11 @@ try:
 except Exception as e:
     raise ImportError("Instala con: pip install PyYAML") from e
 
-from crewai_tools import OCRTool
+# Herramientas propias
+from .tools.ocr_tool import PDFForensicTool
+from .tools.cie10_tool import CIE10ValidationTool
+from .tools.rethus_tool import RETHUSVerificationTool
+from .tools.adres_tool import ADRESVerificationTool
 from .tools.search_tool import OSINTSearchTool
 
 def _load_yaml(path: Path) -> dict:
@@ -32,18 +36,26 @@ def _build_agents(cfg: dict) -> Dict[str, Agent]:
     api_key = os.environ.get("OPENAI_API_KEY", "")
     default_llm = LLM(model="gpt-4o", api_key=api_key) if api_key else None
     
+    # Tool instances
+    pdf_forensic = PDFForensicTool()
+    cie10_validator = CIE10ValidationTool()
+    rethus_verifier = RETHUSVerificationTool()
+    adres_verifier = ADRESVerificationTool()
+    osint_search = OSINTSearchTool()
+    
+    # Assign tools per agent role
+    tools_map = {
+        "auditor_medico_forense": [pdf_forensic, cie10_validator],
+        "investigador_osint": [rethus_verifier, adres_verifier, osint_search],
+        "redactor_dictamen": [],  # No tools needed - synthesizes results
+    }
+    
     for name, data in cfg.items():
-        tools = []
-        if name == "auditor_medico_forense":
-            tools = [OCRTool()]
-        elif name == "investigador_osint":
-            tools = [OSINTSearchTool()]
-            
         agents[name] = Agent(
             role=data.get("role", ""),
             goal=data.get("goal", ""),
             backstory=data.get("backstory", ""),
-            tools=tools,
+            tools=tools_map.get(name, []),
             llm=default_llm,
             verbose=False,
             allow_delegation=False
@@ -75,7 +87,7 @@ crew = Crew(
     ],
     tasks=[
         _tasks["extract_and_validate_task"],
-        _tasks["search_osint_task"],
+        _tasks["search_and_verify_task"],
         _tasks["generate_final_report_task"],
     ],
     process=Process.sequential,
