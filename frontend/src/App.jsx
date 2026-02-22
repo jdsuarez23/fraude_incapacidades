@@ -254,7 +254,7 @@ export default function App() {
             className={`drop-zone ${isDragging ? 'drop-zone-active' : ''} ${file ? 'drop-zone-filled' : ''}`}
             style={{ position: 'relative', minHeight: '260px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', textAlign: 'center' }}
           >
-            <input type="file" accept=".pdf,image/*" onChange={handleFileChange} disabled={isLoading}
+            <input type="file" accept=".pdf,image/*,.doc,.docx" onChange={handleFileChange} disabled={isLoading}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 20 }} />
 
             {!file ? (
@@ -273,7 +273,7 @@ export default function App() {
                 <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
                   {isDragging ? 'Suelta el documento aquí' : 'Arrastra tu certificado médico'}
                 </h3>
-                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>PDF, JPG o PNG — Máx. 20MB</p>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>PDF, Imagen o Word — Máx. 20MB</p>
               </div>
             ) : (
               <div style={{ pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

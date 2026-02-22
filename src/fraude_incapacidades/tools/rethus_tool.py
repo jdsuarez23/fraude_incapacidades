@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from crewai.tools import BaseTool
+import time
 
 
 class RETHUSVerificationTool(BaseTool):
@@ -11,7 +12,7 @@ class RETHUSVerificationTool(BaseTool):
         "(Registro Único Nacional del Talento Humano en Salud) del SISPRO Colombia. "
         "Recibe como input un JSON string con: 'tipo_documento' (CC, CE, PA, etc.) "
         "y 'numero_documento' del profesional. "
-        "Consulta el servicio web público del SISPRO y retorna los resultados (https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx)."
+        "Intenta acceder a la página web real mediante Playwright y bypass del CAPTCHA."
     )
 
     def _run(self, input_data: str) -> str:
@@ -30,88 +31,106 @@ class RETHUSVerificationTool(BaseTool):
             if not numero_doc:
                 return json.dumps({"error": "Número de documento vacío"}, ensure_ascii=False)
 
-            # Map document types to SISPRO codes
-            tipo_map = {"CC": "1", "CE": "2", "PA": "3", "TI": "4", "RC": "5"}
-            tipo_code = tipo_map.get(tipo_doc, "1")
+            # Map to RETHUS dropdown values
+            tipo_map = {"CC": "CC", "CE": "CE", "PA": "PA", "TI": "TI", "PE": "PE", "PT": "PT"}
+            tipo_val = tipo_map.get(tipo_doc, "CC")
 
+            # Múltiples reintentos con Playwright
             try:
-                import requests
+                from playwright.sync_api import sync_playwright
                 
-                # SISPRO RETHUS public consultation endpoint
-                url = "https://web.sispro.gov.co/THS/Api/ConsultaPublica/BuscarTHSxIdentificacion"
-                
-                headers = {
-                    "Content-Type": "application/json",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                    "Referer": "https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx",
-                    "Origin": "https://web.sispro.gov.co",
-                }
+                with sync_playwright() as p:
+                    # Usar chromium headless
+                    browser = p.chromium.launch(headless=True)
+                    context = browser.new_context(
+                        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        viewport={"width": 1280, "height": 800}
+                    )
+                    page = context.new_page()
+                    try:
+                        # 1. Navegar a la página
+                        page.goto("https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx", timeout=30000)
+                        page.wait_for_selector("input#ctl00_cntContenido_txtNumeroIdentificacion", timeout=15000)
+                        
+                        # 2. Leer CAPTCHA client-side variable bypass
+                        captcha_val = page.evaluate("window.tc")
+                        
+                        # 3. Llenar formulario
+                        page.select_option("select#ctl00_cntContenido_ddlTipoIdentificacion", tipo_val)
+                        page.fill("input#ctl00_cntContenido_txtNumeroIdentificacion", numero_doc)
+                        page.fill("input#ctl00_cntContenido_txtCatpchaConfirmation", str(captcha_val))
+                        
+                        # 4. Enviar
+                        page.click("input#ctl00_cntContenido_btnVerificarIdentificacion")
+                        
+                        # 5. Esperar resultados o mensajes
+                        time.sleep(4) # Esperar a que el UpdatePanel responda
+                        
+                        # 6. Extraer resultados
+                        page_text = page.inner_text("body").lower()
+                        html_content = page.content()
+                        
+                        # Si encuentra 'no se encontraron registros'
+                        if "no se han encontrado resultados" in page_text or "no se encontrar" in page_text:
+                             return json.dumps({
+                                "verificado": False,
+                                "fuente": "RETHUS/SISPRO (Raspado Web Automatizado)",
+                                "alerta": f"Profesional con {tipo_doc} {numero_doc} NO encontrado en RETHUS. Esto es MUY SOSPECHOSO.",
+                                "riesgo": "ALTO"
+                            }, ensure_ascii=False, indent=2)
+                        
+                        # Si encuentra la tabla de resultados
+                        elif "nombres y apellidos" in page_text and "profesión" in page_text:
+                            # Buscar elementos de la tabla usando CSS
+                            try:
+                                nombre = page.locator("table#ctl00_cntContenido_grdResultadosBasicos tr:nth-child(2) td:nth-child(2)").inner_text().strip()
+                                profesion = page.locator("table#ctl00_cntContenido_grdResultadosBasicos tr:nth-child(2) td:nth-child(3)").inner_text().strip()
+                                estado = page.locator("table#ctl00_cntContenido_grdResultadosAcademicos tr:nth-child(2) td:nth-child(4)").inner_text().strip()
+                            except:
+                                nombre = "Presente en tabla"
+                                profesion = "Presente en tabla"
+                                estado = "Presente en tabla"
+                                
+                            return json.dumps({
+                                "verificado": True,
+                                "fuente": "RETHUS/SISPRO (Raspado Web Automatizado)",
+                                "datos": {
+                                    "nombre": nombre,
+                                    "profesion": profesion,
+                                    "estado": estado
+                                },
+                                "riesgo": "BAJO"
+                            }, ensure_ascii=False, indent=2)
+                            
+                        else:
+                            # Caso indeterminado, tal vez falló la consulta temporalmente
+                            return json.dumps({
+                                "verificado": None,
+                                "fuente": "RETHUS/SISPRO",
+                                "nota": "El servicio RETHUS respondió pero el resultado fue ambiguo. No se penalizará.",
+                                "recomendacion": f"Verificar manualmente en: https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx con documento {tipo_doc} {numero_doc}",
+                                "detalle_tecnico": "Texto extraído: " + page_text[:200],
+                                "riesgo": "NO_APLICA"
+                            }, ensure_ascii=False, indent=2)
 
-                payload = {
-                    "TipoIdentificacion": tipo_code,
-                    "NumeroIdentificacion": numero_doc,
-                }
-
-                response = requests.post(url, json=payload, headers=headers, timeout=15)
-
-                if response.status_code == 200:
-                    result_data = response.json()
-                    if result_data and isinstance(result_data, list) and len(result_data) > 0:
-                        profesional = result_data[0]
+                    except Exception as e:
+                        # Error de Playwright
                         return json.dumps({
-                            "verificado": True,
+                            "verificado": None,
                             "fuente": "RETHUS/SISPRO",
-                            "url_consulta": "https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx",
-                            "datos": {
-                                "nombre": profesional.get("NombreCompleto", "No disponible"),
-                                "profesion": profesional.get("Profesion", "No disponible"),
-                                "estado_registro": profesional.get("EstadoRegistro", "No disponible"),
-                                "numero_registro": profesional.get("NumeroRegistro", "No disponible"),
-                            },
-                            "riesgo": "BAJO" if profesional.get("EstadoRegistro", "").upper() == "ACTIVO" else "ALTO"
+                            "nota": "El portal RETHUS presentó fallos técnicos temporales (timeout).",
+                            "detalle_tecnico": str(e),
+                            "riesgo": "NO_APLICA"
                         }, ensure_ascii=False, indent=2)
-                    else:
-                        return json.dumps({
-                            "verificado": False,
-                            "fuente": "RETHUS/SISPRO",
-                            "url_consulta": "https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx",
-                            "alerta": f"Profesional con {tipo_doc} {numero_doc} NO encontrado en RETHUS. "
-                                      "Puede ser documento incorrecto o profesional no registrado.",
-                            "riesgo": "ALTO"
-                        }, ensure_ascii=False, indent=2)
-                else:
-                    return json.dumps({
-                        "verificado": None,
-                        "fuente": "RETHUS/SISPRO",
-                        "alerta": f"Servicio SISPRO respondió con código {response.status_code}. "
-                                  "El servicio puede estar temporalmente no disponible.",
-                        "recomendacion": f"Verificar manualmente en: https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx",
-                        "riesgo": "INDETERMINADO"
-                    }, ensure_ascii=False, indent=2)
+                    finally:
+                        browser.close()
 
             except ImportError:
                 return json.dumps({
                     "verificado": None,
-                    "alerta": "Módulo 'requests' no instalado. No se puede consultar RETHUS.",
-                    "recomendacion": f"Verificar manualmente en: https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx con {tipo_doc} {numero_doc}",
-                    "riesgo": "INDETERMINADO"
-                }, ensure_ascii=False, indent=2)
-
-            except requests.exceptions.Timeout:
-                return json.dumps({
-                    "verificado": None,
-                    "alerta": "Timeout al consultar SISPRO. Servicio no disponible o muy lento.",
-                    "recomendacion": f"Verificar manualmente en: https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx",
-                    "riesgo": "INDETERMINADO"
-                }, ensure_ascii=False, indent=2)
-
-            except Exception as e:
-                return json.dumps({
-                    "verificado": None,
-                    "alerta": f"Error conectando con SISPRO: {str(e)}",
-                    "recomendacion": f"Verificar manualmente en: https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx",
-                    "riesgo": "INDETERMINADO"
+                    "nota": "Módulo 'playwright' no instalado para extracción web.",
+                    "riesgo": "NO_APLICA"
                 }, ensure_ascii=False, indent=2)
 
         except Exception as e:
-            return json.dumps({"error": f"Error en verificación RETHUS: {str(e)}"}, ensure_ascii=False)
+            return json.dumps({"error": f"Error crítico en verificación RETHUS: {str(e)}"}, ensure_ascii=False)

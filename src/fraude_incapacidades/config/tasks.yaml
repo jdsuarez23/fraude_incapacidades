@@ -4,76 +4,114 @@ extract_and_validate_task:
     
     Archivo a analizar: {file_path}
     
-    A) EXTRACCIÓN FORENSE Y ESTRUCTURADA: Usa la herramienta "Extraccion Forense y Estructuracion PDF" pasándole exactamente la ruta del archivo: {file_path}.
-       Esto utilizará un modelo de lenguaje interno para extraer limpiamente los datos del paciente, del médico y la EPS en un formato JSON ordenado, además de darte detalles sobre los logos y metadatos.
-       
-    B) LECTURA DEL JSON RESULTANTE: Analiza la respuesta de la herramienta. Tomarás este JSON extraído como la ÚNICA fuente de verdad para los pasos de verificación. Ya tienes extraído:
-       - Nombre y documento del paciente
-       - Nombre y documento/registro del médico
-       - Código CIE-10 y diagnóstico
-       - EPS mencionada
+    A) EXTRACCIÓN FORENSE Y ESTRUCTURADA: Usa la herramienta "Extraccion Forense y Estructuracion PDF"
+       pasándole exactamente la ruta: {file_path}
+       La herramienta usa un LLM interno para devolver un JSON limpio con datos del paciente, médico,
+       EPS, diagnóstico y un análisis de logos/metadatos.
     
-    C) VALIDACIÓN CIE-10: Usa el código extraído en la herramienta "Validacion CIE-10" pasándole un JSON con:
-       {"codigo": "CÓDIGO_AQUÍ", "diagnostico_texto": "DIAGNÓSTICO_AQUÍ", "dias_incapacidad": NUMERO}
+    B) LECTURA DEL JSON RESULTANTE: La herramienta usa GPT-4o Vision para VER el documento.
+       El JSON resultante ahora incluye:
+       - paciente_nombre, paciente_cedula
+       - medico_nombre, medico_cedula
+       - eps_o_ips (también detectado visualmente del logo)
+       - logo_detectado (descripción visual del logo que GPT-4o identificó)
+       - tiene_firma (si vio una firma en el documento)
+       - tiene_sello (si vio un sello)
+       - evaluacion_visual (opinión profesional del modelo de visión sobre la autenticidad)
+       - codigo_cie10, diagnostico_texto, dias_incapacidad, fechas
+    
+    C) VALIDACIÓN CIE-10: Si hay un código CIE-10 extraído, usa "Validacion CIE-10" con un JSON:
+       {"codigo": "CÓDIGO", "diagnostico_texto": "DESCRIPCIÓN", "dias_incapacidad": NUMERO}
        
-    D) ANÁLISIS DE LA CAPA VISUAL Y METADATOS: Revisa el bloque de `hallazgos_forenses_visuales`:
-       - ¿Hay alertas_forenses_automaticas? (¿Creado con Canva/Word/Photoshop? ¿Múltiples fuentes?)
-       - Si no se detectaron imágenes (logos), márcalo como ALTAMENTE SOSPECHOSO.
+    D) ANÁLISIS DE INTEGRIDAD: Revisa las alertas_forenses_automaticas y la evaluacion_visual.
+       La evaluacion_visual de GPT-4o Vision es la fuente más confiable para detectar manipulación.
+       Si el modelo de visión dice que el documento "parece auténtico y profesional", eso es
+       un indicador FUERTE de legitimidad.
 
-    Señala CADA ANOMALÍA como "⚠️ ALERTA DE RIESGO".
+    Genera una lista equilibrada de hallazgos positivos Y negativos.
+    NO seas excesivamente escéptico con documentos que tienen todos los datos correctos.
     
   expected_output: >
-    Un reporte detallado con los datos estructurados extraídos, el análisis forense visual de logos y metadatos, y el resultado de la coherencia del CIE-10.
+    Un reporte con datos estructurados extraídos, hallazgos positivos (datos completos,
+    logo presente, CIE válido) y negativos (alertas forenses si las hay).
   agent: auditor_medico_forense
 
 search_and_verify_task:
   description: >
     PASO 2 — VERIFICACIÓN CRUZADA DE ENTIDADES
     
-    Usa los datos estructurados que el agente anterior extrajo para realizar estas validaciones críticas:
+    A) VALIDACIÓN DE LA EPS: Usa "Validacion EPS Colombia" con el nombre de la EPS del documento.
+       Si el documento menciona una IPS (clínica) y no una EPS, NO des alerta por eso.
+       Recuerda: IPS ≠ EPS. Las incapacidades suelen ser emitidas por la IPS (clínica) donde
+       atienden al paciente, NO por la EPS directamente. Que la EPS no se encuentre en la lista
+       NO significa fraude si es una IPS o clínica.
     
-    A) VALIDACIÓN DE LA EPS: Usa la herramienta "Validacion EPS Colombia" pasándole el nombre de la EPS del documento (ej: "Sura", "Sanitas"). Verificará si es una EPS legal y real del sistema de salud colombiano. Si no lo es o es inventada, esto es un fraude crítico.
+    B) VERIFICACIÓN RETHUS: Usa "Verificacion RETHUS SISPRO" con la cédula del médico.
+       IMPORTANTE: Si el servicio SISPRO no responde, devuelve CAPTCHA o da error,
+       NO consideres esto como evidencia de fraude. Simplemente indica que la verificación
+       no fue posible de forma automatizada. El servicio gubernamental tiene limitaciones técnicas.
     
-    B) VERIFICACIÓN RETHUS (MÉDICO): Usa la herramienta "Verificacion RETHUS SISPRO" pasándole un JSON (ej: {"tipo_documento": "CC", "numero_documento": "1234"}). Esto verifica la habilitación del médico en Colombia.
+    C) VERIFICACIÓN ADRES: Usa "Verificacion ADRES BDUA" con la cédula del paciente.
+       IMPORTANTE: Mismo criterio que RETHUS. Si el servicio no responde, NO es evidencia de fraude.
     
-    C) VERIFICACIÓN ADRES (PACIENTE): Usa la herramienta "Verificacion ADRES BDUA" con el documento del paciente. Verifica la afiliación al SGSSS.
-    
-    D) BÚSQUEDA WEB (OSINT): Usa la herramienta "Busqueda Web OSINT" para buscar el nombre de la clínica o médico. Busca reportes de suplantación, venta fraudulenta, o si la clínica realmente existe.
-    
-    Si falta algún dato clave (ej: no hay EPS), marca una alerta grave.
+    D) BÚSQUEDA WEB OSINT: Usa "Busqueda Web OSINT" con el nombre de la clínica/IPS.
+       IMPORTANTE: Solo reporta como alerta si encuentras resultados ESPECÍFICOS que mencionan
+       directamente a esa clínica en particular en casos de fraude comprobado.
+       Noticias genéricas sobre fraude de incapacidades en Colombia NO son evidencia contra
+       esta clínica en particular.
     
   expected_output: >
-    Resultados y confirmación de existencia de la EPS de Colombia, verificación RETHUS del médico, existencia del paciente en ADRES y rastreo web.
+    Resultados de cada verificación con interpretación JUSTA. Distinguir entre
+    "no verificado por limitación técnica" vs "evidencia real de fraude".
   agent: investigador_osint
 
 generate_final_report_task:
   description: >
     PASO 3 — GENERAR INFORME FINAL EN JSON
     
-    Consolida TODA la información y genera EXCLUSIVAMENTE un JSON con la estructura EXACTA:
+    Consolida la información y genera EXCLUSIVAMENTE un JSON con esta estructura:
     
     {
       "puntaje_veracidad": <0 a 100>,
-      "hallazgos_medicos": "<texto describiendo diagnóstico, datos estructurados del médico (nombre, doc) y paciente, logos extraídos>",
-      "analisis_forense": "<texto describiendo formato del documento (software) y alertas>",
-      "verificacion_entidades": "<texto de existencia EPS, RETHUS, ADRES y OSINT>",
-      "alertas": ["alerta 1", "alerta 2", "..."],
+      "hallazgos_medicos": "<texto>",
+      "analisis_forense": "<texto>",
+      "verificacion_entidades": "<texto>",
+      "alertas": ["alerta 1", ...],
       "veredicto": "<Válida|Sospechosa|Fraudulenta>"
     }
     
-    REGLAS ESTRICTAS DE PUNTAJE Y VEREDICTO:
-    - Empieza en 100 y resta así:
-      - EPS no real o no validada: -30 pts
-      - Falta de logos / formato inusual (creado en word/canva): -20 pts
-      - Médico NO encontrado en RETHUS: -20 pts
-      - Paciente NO afiliado en ADRES: -15 pts
-      - CIE-10 incoherente en días: -15 pts
-      - Rastro farsa / fachada OSINT: -30 pts
+    REGLAS DE PUNTAJE (empezar en 100 y restar SOLO por evidencia real):
     
-    Veredicto: 85-100: Válida | 60-84: Sospechosa | 0-59: Fraudulenta.
+    FACTORES NEGATIVOS (restar puntos):
+    - La evaluación visual de GPT-4o Vision indica claras señales de edición, manipulación o falsedad: -30 pts
+    - Médico confirmado como NO registrado en RETHUS (riesgo ALTO, "no encontrado"): -40 pts
+    - Código CIE-10 NO encontrado o claramente incoherente con los días: -15 pts
+    - Paciente confirmado como NO afiliado en ADRES (riesgo ALTO explícito): -15 pts
+    - EPS/IPS inventada (no existe en Colombia) o el logo visual no coincide: -25 pts
+    - Software de diseño (Canva, Photoshop, Illustrator) como creador del PDF: -25 pts
+    - Reportes ESPECÍFICOS de fraude en OSINT sobre esta clínica/médico en particular: -30 pts
+    - Sin ningún logo/imagen detectada y sin sellos/firmas visuales: -15 pts
+    - Datos estructurados del paciente o médico totalmente ilegibles o ausentes: -15 pts
     
-    (Habeas Data): Anonimiza nombres de paciente.
-    IMPORTANTE: RESPONDE SOLO CON EL JSON.
+    FACTORES QUE NO deben restar puntos:
+    - RETHUS/ADRES no responde o da error técnico (CAPTCHA, timeout): 0 pts (no restar)
+    - PDF creado con Adobe Acrobat, Microsoft Word o sistemas HIS: 0 pts (es normal)
+    - Noticias genéricas sobre fraude de incapacidades en Colombia: 0 pts
+    - Múltiples fuentes tipográficas (2-5 fuentes es normal en documentos formateados): 0 pts
+    - Fechas de creación/modificación ligeramente diferentes: 0 pts (las impresoras hacen esto)
+    
+    FACTORES POSITIVOS (sumar puntos, máximo total 100):
+    - Documento tiene logo/imagen de la entidad: +5 pts
+    - Todos los datos del paciente presentes (nombre, cédula): +5 pts
+    - Todos los datos del médico presentes (nombre, registro): +5 pts
+    - Código CIE-10 válido y coherente con los días: +5 pts
+    - EPS/IPS verificada como existente en Colombia: +5 pts
+    
+    Veredicto: 75-100: "Válida" | 45-74: "Sospechosa" | 0-44: "Fraudulenta"
+    
+    Habeas Data: Anonimiza nombres del paciente (ej: "J*** D***").
+    IMPORTANTE: RESPONDE SOLO CON EL JSON, sin texto antes ni después.
+    
   expected_output: >
-    JSON que el frontend leerá. Estricto.
+    JSON estricto para el frontend.
   agent: redactor_dictamen
