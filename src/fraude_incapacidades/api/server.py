@@ -2,6 +2,10 @@ import os
 import sys
 import io
 from pathlib import Path
+
+# Agregar src a sys.path para que no dependa de poetry para encontrar 'fraude_incapacidades'
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
