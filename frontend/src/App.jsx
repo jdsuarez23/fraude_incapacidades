@@ -7,55 +7,27 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
   const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-    }
+    e.preventDefault(); setIsDragging(false);
+    if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]);
   };
-
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
+    if (e.target.files?.[0]) setFile(e.target.files[0]);
   };
 
   const analyzeFile = async () => {
     if (!file) return;
-    setIsLoading(true);
-    setResult(null);
-    setError(null);
-
+    setIsLoading(true); setResult(null); setError(null);
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      const response = await fetch('http://localhost:8000/api/analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al conectar con la IA de auditoría.');
-      }
-
-      const data = await response.json();
-      if (data.status === 'success') {
-        setResult(data.report);
-      } else {
-        setError(data.error || 'Ocurrió un error desconocido.');
-      }
+      const res = await fetch('http://localhost:8000/api/analyze', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error(`Error del servidor: ${res.status}`);
+      const data = await res.json();
+      if (data.status === 'success') setResult(data.report);
+      else setError(data.error || 'Error desconocido en el análisis.');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -63,175 +35,198 @@ export default function App() {
     }
   };
 
+  const getReportText = (r) => {
+    if (!r) return '';
+    if (typeof r === 'string') return r;
+    return r.raw || r.output || JSON.stringify(r, null, 2);
+  };
+
   return (
-    <div className="min-h-screen bg-dark-900 text-slate-200 font-sans relative overflow-hidden flex flex-col items-center">
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-bg-abyss)', color: 'var(--color-text-primary)', fontFamily: 'Inter, system-ui, sans-serif', position: 'relative', overflowX: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-      {/* Background Cinematic Blobs */}
-      <div className="absolute top-0 -left-4 w-96 h-96 bg-accent-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob"></div>
-      <div className="absolute top-0 -right-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-8 left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-blob animation-delay-4000"></div>
+      {/* Background Blobs */}
+      <div className="bg-blob" style={{ width: '600px', height: '600px', background: 'var(--color-accent-600)', top: '-150px', left: '-200px', animationDelay: '0s' }} />
+      <div className="bg-blob" style={{ width: '500px', height: '500px', background: '#7C3AED', top: '-100px', right: '-150px', animationDelay: '-3s' }} />
+      <div className="bg-blob" style={{ width: '400px', height: '400px', background: 'var(--color-data-500)', bottom: '0', left: '30%', animationDelay: '-6s' }} />
 
-      {/* Navbar Minimalista */}
-      <header className="w-full border-b border-white/5 bg-dark-900/40 backdrop-blur-2xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-accent-500 to-purple-600 shadow-[0_0_25px_rgba(99,102,241,0.4)]">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-white">
+      {/* ── NAVBAR ── */}
+      <header style={{ width: '100%', borderBottom: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(6,10,18,0.7)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '44px', height: '44px', borderRadius: '12px',
+              background: 'linear-gradient(135deg, var(--color-accent-600), #7C3AED)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 20px rgba(99,102,241,0.4)'
+            }}>
+              <svg viewBox="0 0 24 24" fill="white" width="22" height="22">
                 <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
-              Salud<span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-400 to-purple-400">Guard</span>
-            </h1>
-          </div>
-          <div className="hidden sm:flex px-4 py-1.5 rounded-full border border-accent-500/30 bg-accent-500/10 text-accent-300 text-sm font-medium tracking-wide">
-            <span className="relative flex h-2 w-2 mr-2 mt-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-500"></span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              Salud<span className="text-gradient-accent">Guard</span>
             </span>
-            AI Engine Active
+          </div>
+          <div className="badge-live">
+            <span className="dot" />
+            AI Engine Activo
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="relative z-10 flex-grow w-full max-w-5xl px-6 py-16 md:py-24 animate-fade-in-up flex flex-col items-center">
+      {/* ── MAIN ── */}
+      <main style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '880px', padding: '64px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-        <div className="text-center max-w-3xl mb-16">
-          <h2 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 mb-6 tracking-tight">
-            Validador Forense
-          </h2>
-          <p className="text-lg md:text-xl text-slate-400 font-light leading-relaxed">
-            Plataforma impulsada por múltiples agentes <strong className="text-slate-200 font-semibold">CrewAI</strong> para la prevención de fraude en incapacidades del Sistema General de Seguridad Social en Salud.
+        {/* Hero */}
+        <div className="animate-fade-up" style={{ textAlign: 'center', marginBottom: '64px' }}>
+          <div style={{ display: 'inline-block', padding: '4px 16px', borderRadius: '999px', border: '1px solid rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.08)', color: 'var(--color-accent-300)', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '24px' }}>
+            Sistema de Auditoría Forense
+          </div>
+          <h1 className="text-gradient-primary" style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, margin: '0 0 20px 0' }}>
+            Validador Forense<br />
+            <span className="text-gradient-accent">de Incapacidades</span>
+          </h1>
+          <p style={{ fontSize: '1.1rem', color: 'var(--color-text-secondary)', maxWidth: '600px', margin: '0 auto', lineHeight: 1.7, fontWeight: 300 }}>
+            Plataforma multi-agente <strong style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>CrewAI</strong> para detección avanzada de fraude en certificados médicos del <strong style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>SGSSS colombiano</strong>.
           </p>
         </div>
 
-        {/* Upload Dashboard */}
-        <div className={`
-          w-full max-w-3xl glass-panel rounded-3xl p-2 transition-all duration-500 
-          ${isDragging ? 'scale-[1.02] shadow-[0_0_50px_rgba(99,102,241,0.3)]' : ''}
-          ${file && !isLoading ? 'border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.15)]' : ''}
-          ${isLoading ? 'animate-pulse-slow' : ''}
-        `}>
+        {/* Feature chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginBottom: '40px' }}>
+          {['Validación CIE-10', 'Análisis Forense PDF', 'RETHUS / ADRES', 'Detección Fraude IA', 'Informe Estructurado'].map(f => (
+            <span key={f} style={{ padding: '6px 16px', borderRadius: '999px', background: 'var(--color-bg-elevated)', border: '1px solid rgba(255,255,255,0.07)', color: 'var(--color-text-secondary)', fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.03em' }}>
+              ◈ {f}
+            </span>
+          ))}
+        </div>
+
+        {/* ── UPLOAD PANEL ── */}
+        <div className="glass animate-fade-up" style={{ width: '100%', borderRadius: '24px', padding: '8px', marginBottom: '24px' }}>
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`
-              relative w-full h-80 rounded-[1.3rem] border-2 border-dashed flex flex-col items-center justify-center transition-all duration-300
-              ${isDragging ? 'border-accent-400 bg-accent-500/10' : 'border-white/10 hover:border-white/20 hover:bg-white/5'}
-              ${file ? 'border-green-500/30 bg-green-500/5' : ''}
-            `}
+            className={`drop-zone ${isDragging ? 'drop-zone-active' : ''} ${file ? 'drop-zone-filled' : ''}`}
+            style={{ position: 'relative', minHeight: '260px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', textAlign: 'center' }}
           >
-            <input
-              type="file"
-              accept=".pdf,image/*"
-              onChange={handleFileChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-              disabled={isLoading}
-            />
+            <input type="file" accept=".pdf,image/*" onChange={handleFileChange} disabled={isLoading}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 20 }} />
 
             {!file ? (
-              <div className="z-10 flex flex-col items-center text-center px-4 pointer-events-none">
-                <div className="w-20 h-20 mb-6 rounded-full bg-dark-800 border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-slate-400">
+              <div style={{ pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{
+                  width: '80px', height: '80px', borderRadius: '20px', marginBottom: '20px',
+                  background: 'var(--color-bg-elevated)', border: '1px solid rgba(255,255,255,0.08)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: isDragging ? '0 0 30px rgba(99,102,241,0.3)' : 'none',
+                  transition: 'all 0.25s'
+                }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-400)" strokeWidth={1.5} width="36" height="36">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-200 mb-2">Arrastra el documento aquí</h3>
-                <p className="text-slate-500 font-medium">Soporta formatos PDF, JPG o PNG</p>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+                  {isDragging ? 'Suelta el documento aquí' : 'Arrastra tu certificado médico'}
+                </h3>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>PDF, JPG o PNG — Máx. 20MB</p>
               </div>
             ) : (
-              <div className="z-10 flex flex-col items-center text-center px-4 pointer-events-none">
-                <div className="w-24 h-24 mb-6 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center backdrop-blur-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-12 h-12 text-green-400">
+              <div style={{ pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '20px', marginBottom: '20px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="glow-success">
+                  <svg viewBox="0 0 24 24" fill="var(--color-success-500)" width="40" height="40">
                     <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-2">{file.name}</h3>
-                <p className="text-sm px-4 py-1.5 rounded-full bg-dark-800 text-slate-400 border border-white/5 mt-2">
-                  Lista para auditoría
-                </p>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'white', marginBottom: '8px', maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-success-500)', background: 'rgba(16,185,129,0.1)', padding: '4px 12px', borderRadius: '999px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  Documento listo para auditoría
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Action Button Section */}
-        <div className="mt-12 w-full max-w-3xl flex flex-col items-center">
-          <button
-            onClick={analyzeFile}
-            disabled={!file || isLoading}
-            className={`
-                group relative px-10 py-4 w-full sm:w-auto rounded-full font-bold text-lg text-white transition-all 
-                ${!file ? 'bg-dark-800 text-slate-500 border border-white/5 cursor-not-allowed' :
-                'bg-accent-600 hover:bg-accent-500 hover:scale-105 active:scale-95 animate-glow-border'}
-              `}
-          >
+        {/* ── ACTION BUTTON ── */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
+          <button onClick={analyzeFile} disabled={!file || isLoading} className="btn-primary"
+            style={{ padding: '16px 48px', fontSize: '1rem', width: '100%', maxWidth: '400px', border: 'none', cursor: file && !isLoading ? 'pointer' : 'not-allowed' }}>
             {isLoading ? (
-              <span className="flex items-center justify-center gap-3">
-                <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                <svg style={{ animation: 'spin 1s linear infinite', width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" />
                 </svg>
-                Tripulantes IA Analizando...
+                <span>Agentes IA Analizando...</span>
               </span>
             ) : (
-              <span className="flex items-center justify-center gap-2">
-                Iniciar Interrogatorio Forense
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-70 group-hover:translate-x-1 transition-transform">
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                Iniciar Auditoría Forense
+                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style={{ opacity: 0.8 }}>
                   <path fillRule="evenodd" d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z" clipRule="evenodd" />
                 </svg>
               </span>
             )}
           </button>
 
+          {isLoading && (
+            <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.85rem', maxWidth: '380px', lineHeight: 1.6 }}>
+              <span style={{ color: 'var(--color-accent-400)', fontWeight: 600 }}>5 agentes especializados</span> están verificando el documento en paralelo. El proceso tarda entre <strong style={{ color: 'var(--color-text-primary)' }}>30 y 90 segundos</strong>.
+            </div>
+          )}
+
           {file && !isLoading && (
-            <button
-              onClick={() => setFile(null)}
-              className="mt-6 text-slate-500 hover:text-slate-300 transition-colors text-sm font-medium hover:underline"
-            >
-              Cancelar o elegir otro documento
+            <button onClick={() => { setFile(null); setResult(null); setError(null); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '0.85rem', textDecoration: 'underline' }}>
+              Cancelar y elegir otro archivo
             </button>
           )}
         </div>
 
-        {/* Error State */}
+        {/* ── ERROR STATE ── */}
         {error && (
-          <div className="mt-12 w-full max-w-3xl glass-panel bg-red-950/30 border-red-500/30 rounded-2xl p-6 flex items-start gap-4">
-            <div className="p-3 bg-red-500/10 rounded-xl">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-red-500">
+          <div className="glass animate-fade-up" style={{ width: '100%', borderRadius: '16px', padding: '20px 24px', marginBottom: '32px', background: 'rgba(127,0,0,0.15)', borderColor: 'rgba(239,68,68,0.25)', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+            <div style={{ padding: '8px', background: 'rgba(239,68,68,0.1)', borderRadius: '10px', flexShrink: 0 }}>
+              <svg viewBox="0 0 24 24" fill="var(--color-danger-500)" width="24" height="24">
                 <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
               </svg>
             </div>
             <div>
-              <h4 className="text-xl font-bold text-red-400 mb-1">Análisis fallido</h4>
-              <p className="text-slate-300">{error}</p>
+              <p style={{ fontWeight: 700, color: '#FCA5A5', marginBottom: '4px' }}>Error en el análisis</p>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>{error}</p>
             </div>
           </div>
         )}
 
-        {/* Result Report */}
+        {/* ── RESULT REPORT ── */}
         {result && (
-          <div className="mt-16 w-full animate-fade-in-up">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-2 h-10 bg-accent-500 rounded-full glow"></div>
-                <h3 className="text-3xl font-black text-white tracking-tight">Veredicto Forense</h3>
-              </div>
+          <div className="animate-fade-up" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ width: '3px', height: '36px', background: 'linear-gradient(180deg, var(--color-accent-500), #7C3AED)', borderRadius: '999px' }} />
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+                Veredicto <span className="text-gradient-accent">Forense</span>
+              </h2>
             </div>
-
-            <div className="glass-panel bg-dark-900/80 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-              {/* Decorative glow inside report */}
-              <div className="absolute -top-40 -right-40 w-96 h-96 bg-accent-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-              <pre className="relative z-10 whitespace-pre-wrap font-sans text-lg text-slate-300 leading-relaxed font-light">
-                {typeof result === 'object' ? (result.raw || result.output || JSON.stringify(result, null, 2)) : result}
+            <div className="report-panel glass" style={{ padding: '40px 40px' }}>
+              <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '300px', height: '300px', background: 'var(--color-accent-500)', borderRadius: '50%', filter: 'blur(120px)', opacity: 0.06, pointerEvents: 'none' }} />
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace", fontSize: '0.9rem', lineHeight: 1.8, color: 'var(--color-text-secondary)', position: 'relative', zIndex: 1 }}>
+                {getReportText(result)}
               </pre>
             </div>
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <footer style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.78rem', zIndex: 10, position: 'relative' }}>
+        SaludGuard AI · Análisis forense de incapacidades médicas Colombia (SGSSS) · Protegido por Ley 1581/2012
+      </footer>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+      `}</style>
     </div>
   );
 }
