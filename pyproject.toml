@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "fraude_incapacidades"
+version = "0.1.0"
+description = "Sistema IA para evaluación de autenticidad de incapacidades médicas en Colombia"
+authors = ["TuNombre <tunombre@email.com>"]
+readme = "README.md"
+packages = [{include = "fraude_incapacidades", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+crewai = "*"
+crewai-tools = "*"
+pytesseract = "*"
+Pillow = "*"
+PyMuPDF = "*"
+fastapi = "*"
+uvicorn = "*"
+python-multipart = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

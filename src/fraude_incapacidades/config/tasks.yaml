@@ -1,0 +1,35 @@
+extract_text_task:
+  description: >
+    Extrae texto y metadatos del documento cargado (PDF o imagen) usando técnicas OCR.
+    Usa el archivo: {file_path}
+  expected_output: >
+    Texto plano, imágenes embebidas (si aplica) y metadatos del archivo.
+  agent: ocr_agent
+
+analyze_structure_task:
+  description: >
+    Analiza visualmente el documento para evaluar su estructura, sellos, márgenes, logos institucionales y firmas.
+  expected_output: >
+    Informe sobre estructura visual y si corresponde a formatos oficiales.
+  agent: document_structure_agent
+
+validate_medical_data_task:
+  description: >
+    Verifica si la información médica (fechas, diagnóstico, médico, EPS) es coherente y válida.
+  expected_output: >
+    Diagnóstico de coherencia médica y validación contra patrones o bases oficiales.
+  agent: medical_data_verifier
+
+detect_fraud_task:
+  description: >
+    Evalúa el documento con técnicas de visión por computador y modelos IA para detectar posibles falsificaciones.
+  expected_output: >
+    Score de sospecha de falsificación con explicación basada en patrones encontrados.
+  agent: fraud_detection_agent
+
+generate_report_task:
+  description: >
+    Compila los resultados anteriores en un informe técnico con una puntuación de autenticidad.
+  expected_output: >
+    Informe final detallado con puntuación de 0 a 100 y observaciones relevantes.
+  agent: report_generator_agent
