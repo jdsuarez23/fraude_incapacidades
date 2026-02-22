@@ -4,109 +4,76 @@ extract_and_validate_task:
     
     Archivo a analizar: {file_path}
     
-    Ejecuta los siguientes pasos EN ORDEN:
+    A) EXTRACCIÓN FORENSE Y ESTRUCTURADA: Usa la herramienta "Extraccion Forense y Estructuracion PDF" pasándole exactamente la ruta del archivo: {file_path}.
+       Esto utilizará un modelo de lenguaje interno para extraer limpiamente los datos del paciente, del médico y la EPS en un formato JSON ordenado, además de darte detalles sobre los logos y metadatos.
+       
+    B) LECTURA DEL JSON RESULTANTE: Analiza la respuesta de la herramienta. Tomarás este JSON extraído como la ÚNICA fuente de verdad para los pasos de verificación. Ya tienes extraído:
+       - Nombre y documento del paciente
+       - Nombre y documento/registro del médico
+       - Código CIE-10 y diagnóstico
+       - EPS mencionada
     
-    A) EXTRACCIÓN FORENSE: Usa la herramienta "Extraccion Forense PDF" pasándole
-       exactamente la ruta del archivo: {file_path}
-       Esto te dará el texto extraído, los metadatos del PDF, las fuentes y alertas automáticas.
-    
-    B) IDENTIFICACIÓN DE DATOS: Del texto extraído, identifica:
-       - Nombre completo del paciente
-       - Número de cédula/documento del paciente
-       - Diagnóstico y código CIE-10 (si aparece)
-       - Días de incapacidad otorgados
-       - Fecha de inicio y fin de la incapacidad
-       - Nombre del médico que firma
-       - Cédula o registro médico del firmante
-       - EPS o IPS emisora
-       - Cualquier otro dato relevante
-    
-    C) VALIDACIÓN CIE-10: Si encontraste un código CIE-10, usa la herramienta
-       "Validacion CIE-10" pasándole un JSON con los campos:
+    C) VALIDACIÓN CIE-10: Usa el código extraído en la herramienta "Validacion CIE-10" pasándole un JSON con:
        {"codigo": "CÓDIGO_AQUÍ", "diagnostico_texto": "DIAGNÓSTICO_AQUÍ", "dias_incapacidad": NUMERO}
-    
-    D) ANÁLISIS DE INTEGRIDAD: Revisa los metadatos del PDF:
-       - ¿Qué software creó el documento? (sistemas hospitalarios vs Word/Canva/Adobe)
-       - ¿Las fechas de creación y modificación coinciden?
-       - ¿Cuántas fuentes tipográficas distintas hay? (más de 3-4 es sospechoso)
-       - ¿Hay alertas forenses automáticas?
-    
+       
+    D) ANÁLISIS DE LA CAPA VISUAL Y METADATOS: Revisa el bloque de `hallazgos_forenses_visuales`:
+       - ¿Hay alertas_forenses_automaticas? (¿Creado con Canva/Word/Photoshop? ¿Múltiples fuentes?)
+       - Si no se detectaron imágenes (logos), márcalo como ALTAMENTE SOSPECHOSO.
+
     Señala CADA ANOMALÍA como "⚠️ ALERTA DE RIESGO".
-    Sé ESCÉPTICO. No asumas que el documento es real.
     
   expected_output: >
-    Un reporte detallado con: datos del paciente extraídos, datos del médico,
-    resultado de validación CIE-10, análisis de metadatos forenses, y lista
-    de todas las alertas de riesgo encontradas.
+    Un reporte detallado con los datos estructurados extraídos, el análisis forense visual de logos y metadatos, y el resultado de la coherencia del CIE-10.
   agent: auditor_medico_forense
 
 search_and_verify_task:
   description: >
-    PASO 2 — VERIFICACIÓN DE ENTIDADES Y BÚSQUEDA OSINT
+    PASO 2 — VERIFICACIÓN CRUZADA DE ENTIDADES
     
-    Con base en los datos extraídos por el agente anterior, ejecuta:
+    Usa los datos estructurados que el agente anterior extrajo para realizar estas validaciones críticas:
     
-    A) VERIFICACIÓN RETHUS: Si tienes el número de cédula del médico firmante,
-       usa la herramienta "Verificacion RETHUS SISPRO" pasándole un JSON:
-       {"tipo_documento": "CC", "numero_documento": "NÚMERO_CÉDULA_MÉDICO"}
-       Esto verificará si el médico está registrado en el sistema de salud colombiano.
+    A) VALIDACIÓN DE LA EPS: Usa la herramienta "Validacion EPS Colombia" pasándole el nombre de la EPS del documento (ej: "Sura", "Sanitas"). Verificará si es una EPS legal y real del sistema de salud colombiano. Si no lo es o es inventada, esto es un fraude crítico.
     
-    B) VERIFICACIÓN ADRES: Si tienes el número de cédula del paciente,
-       usa la herramienta "Verificacion ADRES BDUA" pasándole un JSON:
-       {"tipo_documento": "CC", "numero_documento": "NÚMERO_CÉDULA_PACIENTE"}
-       Esto verificará si el paciente está afiliado al sistema de salud.
+    B) VERIFICACIÓN RETHUS (MÉDICO): Usa la herramienta "Verificacion RETHUS SISPRO" pasándole un JSON (ej: {"tipo_documento": "CC", "numero_documento": "1234"}). Esto verifica la habilitación del médico en Colombia.
     
-    C) BÚSQUEDA OSINT: Usa la herramienta "Busqueda Web OSINT" para buscar
-       información sobre la EPS/IPS mencionada en el documento.
-       Busca reportes de fraude, venta de incapacidades falsas o suplantación.
+    C) VERIFICACIÓN ADRES (PACIENTE): Usa la herramienta "Verificacion ADRES BDUA" con el documento del paciente. Verifica la afiliación al SGSSS.
     
-    Si NO tienes algún dato (cédula del médico o paciente), indica que no fue
-    posible extraerlo del documento y marca eso como una alerta adicional.
+    D) BÚSQUEDA WEB (OSINT): Usa la herramienta "Busqueda Web OSINT" para buscar el nombre de la clínica o médico. Busca reportes de suplantación, venta fraudulenta, o si la clínica realmente existe.
+    
+    Si falta algún dato clave (ej: no hay EPS), marca una alerta grave.
     
   expected_output: >
-    Resultados de RETHUS (verificación del médico), resultados de ADRES
-    (verificación del paciente), y hallazgos de búsqueda web OSINT sobre
-    la entidad de salud.
+    Resultados y confirmación de existencia de la EPS de Colombia, verificación RETHUS del médico, existencia del paciente en ADRES y rastreo web.
   agent: investigador_osint
 
 generate_final_report_task:
   description: >
     PASO 3 — GENERAR INFORME FINAL EN JSON
     
-    Consolida TODA la información de los pasos anteriores y genera
-    EXCLUSIVAMENTE un JSON válido con esta estructura EXACTA:
+    Consolida TODA la información y genera EXCLUSIVAMENTE un JSON con la estructura EXACTA:
     
     {
-      "puntaje_veracidad": <número de 0 a 100>,
-      "hallazgos_medicos": "<texto describiendo el diagnóstico CIE-10, coherencia de días y hallazgos médicos>",
-      "analisis_forense": "<texto describiendo metadatos, software creador, fuentes, señales de edición>",
-      "verificacion_entidades": "<texto describiendo resultados de RETHUS, ADRES y OSINT>",
+      "puntaje_veracidad": <0 a 100>,
+      "hallazgos_medicos": "<texto describiendo diagnóstico, datos estructurados del médico (nombre, doc) y paciente, logos extraídos>",
+      "analisis_forense": "<texto describiendo formato del documento (software) y alertas>",
+      "verificacion_entidades": "<texto de existencia EPS, RETHUS, ADRES y OSINT>",
       "alertas": ["alerta 1", "alerta 2", "..."],
       "veredicto": "<Válida|Sospechosa|Fraudulenta>"
     }
     
-    REGLAS PARA EL PUNTAJE:
-    - Empieza en 100% y resta puntos por cada anomalía:
-      - Código CIE-10 no encontrado o incoherente: -15 a -25 pts
-      - Médico no verificado en RETHUS: -15 a -20 pts
-      - Paciente no verificado en ADRES: -10 pts
-      - Metadatos sospechosos (software no hospitalario): -10 a -20 pts
-      - Múltiples fuentes tipográficas: -10 pts
-      - Fechas de creación/modificación diferentes: -10 pts
-      - Reportes de fraude OSINT encontrados: -15 a -25 pts
-      - Datos del documento incompletos o ilegibles: -5 a -10 pts
+    REGLAS ESTRICTAS DE PUNTAJE Y VEREDICTO:
+    - Empieza en 100 y resta así:
+      - EPS no real o no validada: -30 pts
+      - Falta de logos / formato inusual (creado en word/canva): -20 pts
+      - Médico NO encontrado en RETHUS: -20 pts
+      - Paciente NO afiliado en ADRES: -15 pts
+      - CIE-10 incoherente en días: -15 pts
+      - Rastro farsa / fachada OSINT: -30 pts
     
-    - Veredicto final:
-      - 80-100: "Válida"
-      - 40-79: "Sospechosa"  
-      - 0-39: "Fraudulenta"
+    Veredicto: 85-100: Válida | 60-84: Sospechosa | 0-59: Fraudulenta.
     
-    CUMPLE la Ley 1581/2012 (Habeas Data): redacta los datos personales
-    de forma semi-oculta (ej: "J*** D*** G***") en el informe.
-    
-    IMPORTANTE: Tu respuesta debe ser SOLO el JSON, sin texto antes ni después.
-    
+    (Habeas Data): Anonimiza nombres de paciente.
+    IMPORTANTE: RESPONDE SOLO CON EL JSON.
   expected_output: >
-    Un JSON válido con exactamente los campos: puntaje_veracidad, hallazgos_medicos,
-    analisis_forense, verificacion_entidades, alertas, veredicto.
+    JSON que el frontend leerá. Estricto.
   agent: redactor_dictamen
