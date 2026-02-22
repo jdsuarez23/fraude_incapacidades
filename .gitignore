@@ -2,3 +2,7 @@
 test/uploads/
 frontend/node_modules/
 __pycache__/.env
+.env
+__pycache__/
+*.pyc
+*.log

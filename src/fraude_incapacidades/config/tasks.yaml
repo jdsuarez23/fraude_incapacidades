@@ -1,188 +1,57 @@
-extract_text_task:
+extract_and_validate_task:
   description: >
-    Extrae TODO el contenido del documento médico cargado desde: {file_path}.
+    Ejecuta los siguientes pasos de análisis sobre el archivo: {file_path}
     
-    Debes obtener:
-    1. El TEXTO COMPLETO visible del documento (nombre del paciente, cédula, diagnóstico,
-       códigos CIE-10, fechas, nombre del médico, número de registro médico, NIT de EPS/IPS,
-       número del certificado, modalidad de prestación, duración en días, ciudad).
-    2. Los METADATOS TÉCNICOS del archivo PDF (software productor, fecha de creación,
-       fecha de última modificación, versión del PDF, autor, número de páginas).
-    3. La CANTIDAD DE IMÁGENES u objetos embebidos en el documento.
+    1. VALIDACIÓN DE CÓDIGOS CIE: Extrae el texto del archivo e identifica el diagnóstico.
+       Crúzalo conceptualmente con la base CIE-10/CIE-11. Verifica si el número de días
+       de incapacidad es coherente con los protocolos de medicina laboral para ese diagnóstico.
     
-    ALERTA FORENSE: Si el campo "producer" o "creator" de los metadatos contiene
-    herramientas como 'iLovePDF', 'Smallpdf', 'PDFescape', 'Sejda', 'PDF24', 'Adobe Acrobat',
-    o cualquier herramienta de edición de terceros, REPORTARLO COMO SEÑAL CRÍTICA DE ALERTA.
-    Los sistemas corporativos de EPS (SURA, Compensar, Nueva EPS, etc.) generan PDFs con
-    software empresarial propio, nunca con herramientas web gratuitas.
+    2. VERIFICACIÓN DE ENTIDADES Y REGISTRO: Verifica la consistencia del EPS/IPS
+       y si la estructura visual y nombres corresponden. 
+    
+    3. ANÁLISIS DE INTEGRIDAD DEL ARCHIVO: Extrae y revisa metadatos técnicos y
+       la capa visual. Busca rastros de edición (Adobe Acrobat, herramientas IA, edición
+       de capas, parches de texto, saltos de tipografía en nombre, fechas y cédula).
+    
+    4. CONSISTENCIA DE IDENTIDAD: Verifica si la estructura del nombre y cédula
+       siguen los patrones colombianos estandarizados (ADRES/RUES).
+    
+    * Señala CADA ANOMALÍA detectada como "Alerta de Riesgo".
+    * No des por sentado NADA. Sé escéptico.
   expected_output: >
-    Un reporte con:
-    - Texto completo extraído del documento.
-    - Metadatos técnicos detallados del archivo.
-    - Lista de objetos embebidos (imágenes, capas).
-    - Alerta inicial si se detectó software de edición de terceros.
-  agent: ocr_agent
+    Datos brutos forenses, resumen de validaciones médicas, alertas de riesgo encontradas
+    y evaluación de consistencia de los documentos extraídos.
+  agent: auditor_medico_forense
 
-analyze_structure_task:
+search_osint_task:
   description: >
-    Basándote en el texto extraído en la tarea anterior, evalúa la estructura formal
-    del documento como certificado de incapacidad médica en Colombia:
-    
-    1. VERIFICACIÓN DE ENTIDADES:
-       - ¿El NIT de la EPS es válido y activo? (Ej: EPS SURA = 800088702, Compensar = 800025221)
-       - ¿El NIT de la IPS que atiende es un prestador registrado en REPS (Registro Especial de
-         Prestadores de Salud)?
-       - ¿El nombre de la IPS corresponde al NIT declarado?
-    
-    2. CAMPOS OBLIGATORIOS según normativa colombiana:
-       - Número del certificado de incapacidad
-       - Fecha completa de expedición (día, mes, año, hora)
-       - Clasificación del origen (Enfermedad General / Accidente de Trabajo / Enfermedad Profesional)
-       - Tipo de prestación (Ambulatorio / Hospitalario)
-       - Clasificación (Inicial / Prórroga)
-       - Modalidad (Intramural / Extramural / Telemedicina)
-       - Si es retroactiva (Sí/No)
-    
-    3. COHERENCIA DE FECHAS: ¿Las fechas de inicio y fin son lógicas? ¿Son posteriores a la
-       fecha de expedición? ¿Es un fin de semana o festivo (potencial señal de fraude)?
-    
-    Señala CADA inconsistencia como una "ALERTA DE RIESGO" con nivel: CRÍTICO / ALTO / MEDIO / BAJO.
+    Basado en la IPS, la EPS o los médicos identificados en la tarea anterior, realiza una
+    búsqueda en la Web usando la herramienta proveída.
+    Busca si el "formato x" o "clínica y" tienen reportes de fraude, venta de incapacidades falsas
+    o suplantaciones en Colombia.
   expected_output: >
-    Evaluación detallada de la estructura del documento con lista de alertas de riesgo priorizadas
-    y validación de campos obligatorios según la normativa SGSSS colombiana.
-  agent: document_structure_agent
+    Resultados de la búsqueda web aplicados al análisis de riesgo de esta incapacidad.
+    Indica si hubo confirmación en línea de algún indicio de fraude previo.
+  agent: investigador_osint
 
-validate_medical_data_task:
+generate_final_report_task:
   description: >
-    Realiza la validación médico-legal profunda del contenido del certificado:
+    Usa la información recopilada por la auditoría forense general y el OSINT web
+    para generar el informe final exacto requerido.
+    El informe DEBE MANTENER estrictamente la privacidad (Ley de Protección de Datos/Habeas Data)
+    usando formatos semi-ocultos si es información supremamente sensible, pero 
+    debe entregar el dictamen.
     
-    1. VALIDACIÓN CIE-10:
-       - Verifica que el código diagnóstico exista en la clasificación CIE-10.
-       - Determina si la duración de la incapacidad (número de días) es COHERENTE con el
-         protocolo de manejo del diagnóstico según la guía de la DSSA y estándares médicos.
-       - DIAGNÓSTICOS DE ALTO RIESGO DE FRAUDE (señalar si aplica):
-         A09 (Diarrea no especificada), A083 (Gastroenteritis viral), J00 (Rinofaringitis),
-         J06.9 (IRAS no especificada), M54.5 (Lumbalgia), K30 (Dispepsia),
-         R51 (Cefalea), R50.9 (Fiebre no especificada).
-       - ¿Es un diagnóstico que IMPOSIBILITA trabajar el número de días declarado?
+    Presenta EXCLUSIVAMENTE la siguiente estructura:
     
-    2. VERIFICACIÓN DEL PROFESIONAL (RETHUS):
-       - El número de cédula del médico debe coincidir con su número de registro médico.
-       - ¿El médico es de la especialidad adecuada para el diagnóstico declarado?
-       - ¿Es sospechoso que la atención sea virtual (telemedicina) para ese diagnóstico?
+    [Puntaje de Veracidad] (0% al 100%)
     
-    3. VERIFICACIÓN DEL PACIENTE:
-       - ¿El tipo y número de documento del paciente tienen formato colombiano válido?
-         (CC: 7-10 dígitos, TI: 10-11 dígitos, CE: 6-10 dígitos)
-       - ¿La IPS de afiliación del paciente es coherente con su ciudad declarada?
+    [Hallazgos Médicos] (Reporta el CIE y la coherencia de los días de incapacidad)
     
-    4. COHERENCIA LÓGICA:
-       - ¿El diagnóstico es compatible con la modalidad de prestación (ambulatorio vs hospitalario)?
-       - Para diagnósticos leves (Ej: A083 gastroenteritis), ¿es sospechoso más de 3 días?
+    [Análisis Forense] (Reporta detección de edición/IA, metadatos, tipografía, parches)
+    
+    [Veredicto Final] (SOLO UNA PALABRA: Válida, Sospechosa o Fraudulenta)
   expected_output: >
-    Validación completa con: diagnóstico CIE-10 verificado, coherencia de días de incapacidad,
-    estado del médico en RETHUS, banderas rojas de identidad y coherencia lógica del cuadro clínico.
-  agent: medical_data_verifier
-
-detect_fraud_task:
-  description: >
-    Integra TODOS los hallazgos anteriores para determinar el nivel de sospecha de fraude.
-    
-    Evalúa las siguientes dimensiones de riesgo:
-    
-    DIMENSIÓN 1 — FORENSE DIGITAL (peso: 40%)
-    - ¿Se detectó software de edición no corporativo en metadatos? (iLovePDF, etc.) → CRÍTICO
-    - ¿La fecha de modificación del PDF es posterior a la fecha de expedición en el documento?
-    - ¿Hay capas u objetos superpuestos que sugieran parcheado de texto?
-    
-    DIMENSIÓN 2 — ENTIDADES E INSTITUCIONES (peso: 25%)
-    - ¿El NIT de EPS/IPS es válido y activo en el REPS?
-    - ¿Hay inconsistencia entre el logo o nombre mencionado y el NIT?
-    
-    DIMENSIÓN 3 — DATOS MÉDICOS Y CLÍNICOS (peso: 20%)
-    - ¿El diagnóstico CIE-10 es exacto y la duración es razonable?
-    - ¿Es un diagnóstico de "lista de alto fraude"?
-    - ¿El profesional tiene habilitación para el tipo de atención?
-    
-    DIMENSIÓN 4 — IDENTIDAD DEL PACIENTE (peso: 15%)
-    - ¿El formato de cédula/TI es válido para Colombia?
-    - ¿Hay inconsistencias en nombre o IPS de afiliación?
-    
-    Calcula un PUNTAJE DE RIESGO DE FRAUDE de 0 a 100:
-    0-20 = Bajo riesgo (Probablemente auténtico)
-    21-50 = Moderado (Investigar antes de pagar)
-    51-80 = Alto (Rechazar provisionalmente, pedir verificación directa con EPS)
-    81-100 = Crítico (Evidencia fuerte de fraude — iniciar proceso disciplinario)
-  expected_output: >
-    Puntaje de riesgo de fraude con desglose por dimensión, lista de señales de alerta
-    identificadas, nivel de confianza del análisis y clasificación del caso.
-  agent: fraud_detection_agent
-
-generate_report_task:
-  description: >
-    Redacta el INFORME FINAL DE VALIDACIÓN FORENSE DE INCAPACIDAD MÉDICA.
-    Usa EXACTAMENTE este formato:
-    
-    ══════════════════════════════════════════════════════
-    📋 INFORME DE VALIDACIÓN FORENSE — INCAPACIDAD MÉDICA
-    ══════════════════════════════════════════════════════
-    
-    ⚖️ PUNTAJE DE VERACIDAD: XX% | 🔴/🟡/🟢 VEREDICTO: [VÁLIDA / SOSPECHOSA / FRAUDULENTA]
-    
-    ──────────────────────────────────────────────────────
-    1. DATOS BÁSICOS DEL DOCUMENTO
-    ──────────────────────────────────────────────────────
-    • Paciente:        [Nombre + Cédula]
-    • EPS:             [Nombre + NIT]
-    • IPS que atiende: [Nombre + NIT]
-    • Médico:          [Nombre + Registro Médico]
-    • No. Certificado: [Número]
-    • Fecha expedición:[Fecha completa]
-    • Diagnóstico:     [Código CIE-10 + Descripción]
-    • Días:            [N días — Desde [Fecha] hasta [Fecha]]
-    • Modalidad:       [Ambulatorio/Hospitalario — Intramural/Telemedicina]
-    
-    ──────────────────────────────────────────────────────
-    2. HALLAZGOS FORENSES DIGITALES
-    ──────────────────────────────────────────────────────
-    [Listar hallazgos del análisis de metadatos y estructura del archivo]
-    
-    ──────────────────────────────────────────────────────
-    3. VALIDACIÓN MÉDICA CIE-10
-    ──────────────────────────────────────────────────────
-    [Análisis de coherencia diagnóstico-días-modalidad]
-    
-    ──────────────────────────────────────────────────────
-    4. VERIFICACIÓN DE ENTIDADES Y PROFESIONAL
-    ──────────────────────────────────────────────────────
-    [Estado de EPS, IPS y médico en registros oficiales]
-    
-    ──────────────────────────────────────────────────────
-    5. ALERTAS DE RIESGO
-    ──────────────────────────────────────────────────────
-    🔴 CRÍTICO:  [Alertas críticas]
-    🟠 ALTO:     [Alertas altas]
-    🟡 MEDIO:    [Alertas medias]
-    🟢 BAJO:     [Alertas bajas o ninguna]
-    
-    ──────────────────────────────────────────────────────
-    6. VEREDICTO FINAL Y RECOMENDACIONES
-    ──────────────────────────────────────────────────────
-    Veredicto: [VÁLIDA ✅ / SOSPECHOSA ⚠️ / FRAUDULENTA ❌]
-    
-    Acciones recomendadas:
-    • [Acción 1]
-    • [Acción 2]
-    • [Acción 3]
-    
-    ──────────────────────────────────────────────────────
-    ⚠️ Nota: Este informe es generado por IA y debe ser
-    revisado por un profesional de RRHH o jurídico antes
-    de tomar decisiones legales. Aplica Ley 1581/2012
-    (Habeas Data).
-    ══════════════════════════════════════════════════════
-  expected_output: >
-    Informe final completo con el formato exacto especificado, incluyendo puntaje de
-    veracidad, veredicto, todos los hallazgos organizados por categoría, alertas
-    de riesgo priorizadas y recomendaciones de acción.
-  agent: report_generator_agent
+    Un informe en texto plano que contiene única y exclusivamente el formato
+    estructurado indicado arriba, sin preámbulos.
+  agent: redactor_dictamen
