@@ -51,7 +51,7 @@ class PDFForensicExtractTool(BaseTool):
                     "fecha_modificacion": raw_meta.get("modDate", ""),
                 })
                 for i, page in enumerate(doc):
-                    if i >= 3: break
+                    if i >= 2: break  # Entregable 1: hasta 2 páginas
                     mat = fitz.Matrix(2.0, 2.0)
                     pix = page.get_pixmap(matrix=mat)
                     page_images_b64.append(base64.b64encode(pix.tobytes("png")).decode("utf-8"))
@@ -106,7 +106,12 @@ class PDFForensicExtractTool(BaseTool):
                 '  "paciente_nombre": "nombre completo del paciente",\n'
                 '  "paciente_cedula": "número de cédula/documento del paciente",\n'
                 '  "medico_nombre": "nombre completo del médico",\n'
-                '  "medico_cedula": "cédula o registro profesional del médico",\n'
+                '  "medico_cedula": "cédula de ciudadanía del médico",\n'
+                '  "medico_registro_medico": "registro médico (RM) del médico, distinto de su cédula",\n'
+                '  "paciente_tipo_doc": "tipo de documento del paciente (CC, TI, CE, ...), separado del número",\n'
+                '  "consecutivo_incapacidad": "número o consecutivo de la incapacidad",\n'
+                '  "documento_manuscrito": true/false,\n'
+                '  "legibilidad_estimada": número de 0 a 100 (qué tan legible es el documento),\n'
                 '  "eps_o_ips": "nombre de la EPS o IPS que aparece en el documento o logo",\n'
                 '  "codigo_cie10": "código CIE-10 si aparece",\n'
                 '  "diagnostico_texto": "descripción del diagnóstico",\n'

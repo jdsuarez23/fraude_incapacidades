@@ -3,6 +3,11 @@ extract_and_validate_task:
     PASO 1 — EXTRACCIÓN Y ANÁLISIS FORENSE DEL DOCUMENTO
     
     Archivo a analizar: {file_path}
+
+    METADATOS FORENSES DETERMINISTAS DEL PDF (calculados por el sistema; tómalos como hechos):
+    {metadatos_forenses}
+    Si el estado es "editor_grafico" hay rastro de edición gráfica (-35 pts). Si es "aplanados" es solo una
+    alerta informativa leve: el archivo NO se califica como adulterado (aplica solo el -10 de metadatos aplanados).
     
     A) EXTRACCIÓN FORENSE Y ESTRUCTURADA: Usa la herramienta "Extraccion Forense y Estructuracion PDF"
        pasándole exactamente la ruta: {file_path}
@@ -11,8 +16,9 @@ extract_and_validate_task:
     
     B) LECTURA DEL JSON RESULTANTE: La herramienta usa un modelo de visión para VER el documento.
        El JSON resultante ahora incluye:
-       - paciente_nombre, paciente_cedula
-       - medico_nombre, medico_cedula
+       - paciente_nombre, paciente_tipo_doc, paciente_cedula
+       - medico_nombre, medico_cedula, medico_registro_medico, consecutivo_incapacidad
+       - documento_manuscrito, legibilidad_estimada
        - eps_o_ips (también detectado visualmente del logo)
        - logo_detectado (descripción visual del logo que el modelo identificó)
        - tiene_firma (si vio una firma en el documento)
@@ -68,50 +74,64 @@ search_and_verify_task:
 generate_final_report_task:
   description: >
     PASO 3 — GENERAR INFORME FINAL EN JSON
-    
+
     Consolida la información y genera EXCLUSIVAMENTE un JSON con esta estructura:
-    
+
     {
-      "puntaje_veracidad": <0 a 100>,
+      "puntaje_veracidad": <0 a 100, o null si el documento es Inconcluso>,
+      "veredicto": "<Válido|Sospechoso|Potencialmente Fraudulento|Inconcluso / No Procesable>",
       "hallazgos_medicos": "<texto>",
       "analisis_forense": "<texto>",
       "verificacion_entidades": "<texto>",
-      "alertas": ["alerta 1", ...],
-      "veredicto": "<Válida|Sospechosa|Fraudulenta>"
+      "alertas": ["alerta de riesgo real 1", ...],
+      "desglose": [{"regla": "<nombre de la regla>", "puntos": <negativo>}],
+      "verificadores": [
+        {"fuente": "Catálogo CIE-10", "estado": "<Verificado|Alerta de Rango|No encontrado>", "detalle": "<texto>"},
+        {"fuente": "EPS / Catálogo Local", "estado": "<Verificado|No encontrado>", "detalle": "<texto>"},
+        {"fuente": "RETHUS / SISPRO", "estado": "<Verificado|No encontrado|Consulta No Disponible>", "detalle": "<texto>"},
+        {"fuente": "ADRES / BDUA", "estado": "<Verificado|Inactiva|Consulta No Disponible>", "detalle": "<texto>"},
+        {"fuente": "Fuentes Abiertas OSINT", "estado": "<Sin hallazgos adversos|Hallazgo específico|Consulta No Disponible>", "detalle": "<texto>"}
+      ],
+      "verificacion_externa_pendiente": ["RETHUS", "ADRES"],
+      "datos_extraidos": {
+        "paciente": {"nombre": "<nombre>", "tipo_doc": "<CC|TI|CE|...>", "numero": "<número>"},
+        "profesional": {"nombre": "<nombre>", "cedula": "<cédula>", "registro_medico": "<RM>"},
+        "entidad": {"eps_ips": "<nombre>", "logo": "<Detectado|Ausente>", "firma_sello": "<Legible|No legible / Ausente>"},
+        "incapacidad": {"consecutivo": "<id>", "codigo_cie10": "<código>", "fecha_inicio": "<AAAA-MM-DD>",
+                        "fecha_fin": "<AAAA-MM-DD>", "dias_otorgados": <número>, "rango_cie10": "<ej. 1-3 días>"}
+      }
     }
-    
-    REGLAS DE PUNTAJE (empezar en 100 y restar SOLO por evidencia real):
-    
-    FACTORES NEGATIVOS (restar puntos):
-    - La evaluación visual del modelo indica claras señales de edición, manipulación o falsedad: -30 pts
-    - Médico confirmado como NO registrado en RETHUS (riesgo ALTO, "no encontrado"): -40 pts
-    - Código CIE-10 NO encontrado o claramente incoherente con los días: -15 pts
-    - Paciente confirmado como NO afiliado en ADRES (riesgo ALTO explícito): -15 pts
-    - EPS/IPS inventada (no existe en Colombia) o el logo visual no coincide: -25 pts
-    - Software de diseño (Canva, Photoshop, Illustrator) como creador del PDF: -25 pts
-    - Reportes ESPECÍFICOS de fraude en OSINT sobre esta clínica/médico en particular: -30 pts
-    - Sin ningún logo/imagen detectada y sin sellos/firmas visuales: -15 pts
-    - Datos estructurados del paciente o médico totalmente ilegibles o ausentes: -15 pts
-    
-    FACTORES QUE NO deben restar puntos:
-    - RETHUS/ADRES no responde o da error técnico (CAPTCHA, timeout): 0 pts (no restar)
-    - PDF creado con Adobe Acrobat, Microsoft Word o sistemas HIS: 0 pts (es normal)
-    - Noticias genéricas sobre fraude de incapacidades en Colombia: 0 pts
-    - Múltiples fuentes tipográficas (2-5 fuentes es normal en documentos formateados): 0 pts
-    - Fechas de creación/modificación ligeramente diferentes: 0 pts (las impresoras hacen esto)
-    
-    FACTORES POSITIVOS (sumar puntos, máximo total 100):
-    - Documento tiene logo/imagen de la entidad: +5 pts
-    - Todos los datos del paciente presentes (nombre, cédula): +5 pts
-    - Todos los datos del médico presentes (nombre, registro): +5 pts
-    - Código CIE-10 válido y coherente con los días: +5 pts
-    - EPS/IPS verificada como existente en Colombia: +5 pts
-    
-    Veredicto: 75-100: "Válida" | 45-74: "Sospechosa" | 0-44: "Fraudulenta"
-    
-    Habeas Data: Anonimiza nombres del paciente (ej: "J*** D***").
+
+    Si un dato no es identificable usa "No legible" o "Dato ausente" (nunca inventes datos).
+    "verificacion_externa_pendiente" lista SOLO las fuentes cuya consulta no estuvo disponible.
+
+    REGLAS DE PUNTAJE (Entregable 1: partir de 100 y restar SOLO por evidencia real):
+    - -45 pts: RETHUS u OSINT indican que el profesional no existe / no tiene habilitación vigente,
+      o la IPS emisora es apócrifa.
+    - -35 pts: adulteración digital en regiones críticas (fechas/días) o rastros de Photoshop,
+      Illustrator, Canva o editores PDF en línea en los metadatos.
+    - -25 pts: incoherencia clínica CIE-10 (días de reposo que superan en más del 100% el estándar
+      de referencia) o error aritmético entre fecha de inicio, fecha de fin y días otorgados.
+    - -20 pts: ADRES reporta afiliación inactiva o la EPS de afiliación no coincide con la emisora.
+    - -10 pts: metadatos eliminados/aplanados, o no se detecta visualmente firma o sello médico.
+    Cada regla se aplica UNA sola vez. No existen puntos positivos.
+
+    FACTORES QUE NO restan puntos (0 pts):
+    - RETHUS/ADRES/OSINT no responde (CAPTCHA, timeout, error técnico): estado
+      "Verificación externa pendiente"; NUNCA es evidencia de fraude.
+    - PDF creado con Adobe Acrobat, Microsoft Word o sistemas HIS.
+    - Noticias genéricas sobre fraude de incapacidades en Colombia.
+    - Fechas de creación/modificación ligeramente diferentes.
+
+    VEREDICTO por puntaje: 80-100 "Válido" | 41-79 "Sospechoso" | 0-40 "Potencialmente Fraudulento".
+    La herramienta de extracción reporta "documento_manuscrito" y "legibilidad_estimada" (0-100).
+    Si el documento es manuscrito, ilegible o con legibilidad/lectura OCR < 70%: veredicto
+    "Inconcluso / No Procesable" y puntaje_veracidad null (sin puntaje especulativo).
+
+    Habeas Data (Ley 1581): anonimiza el nombre del paciente (ej: "J*** D***") y enmascara su número
+    de documento en TODOS los textos del informe.
     IMPORTANTE: RESPONDE SOLO CON EL JSON, sin texto antes ni después.
-    
+
   expected_output: >
     JSON estricto para el frontend.
   agent: redactor_dictamen

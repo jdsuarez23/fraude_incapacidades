@@ -45,6 +45,8 @@ El backend expone una API REST para procesar los documentos y se encarga de ejec
    ```
    Después, agrega tu clave de OpenAI a `OPENAI_API_KEY` en `.env`. No compartas ese archivo.
    `OPENAI_MODEL` configura el modelo de los agentes y el análisis visual. Si se omite, se usa `gpt-4o`; cualquier alternativa debe admitir imágenes y Chat Completions. Reinicia el backend tras cambiarlo.
+   `VITE_API_URL` indica al frontend la dirección del backend y utiliza `http://localhost:8000` por defecto. Vite lee las variables desde el `.env` de la raíz; reinicia el frontend después de modificarlas. Las variables `VITE_` son públicas y no deben contener claves.
+   `FRAUDE_MOCK_REGISTRY` se gestiona internamente para el laboratorio de documentos sintéticos; no lo actives para análisis reales.
 4. Inicia el servidor de FastAPI:
    ```powershell
    $env:PYTHONDONTWRITEBYTECODE="1"

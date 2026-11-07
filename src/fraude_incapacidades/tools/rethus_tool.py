@@ -31,6 +31,11 @@ class RETHUSVerificationTool(BaseTool):
             if not numero_doc:
                 return json.dumps({"error": "Número de documento vacío"}, ensure_ascii=False)
 
+            from ..mock_registry import tool_response
+            _mock = tool_response("rethus", data)
+            if _mock is not None:
+                return _mock
+
             # Map to RETHUS dropdown values
             tipo_map = {"CC": "CC", "CE": "CE", "PA": "PA", "TI": "TI", "PE": "PE", "PT": "PT"}
             tipo_val = tipo_map.get(tipo_doc, "CC")

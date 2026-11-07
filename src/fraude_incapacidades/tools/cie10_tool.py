@@ -7,6 +7,7 @@ from crewai.tools import BaseTool
 # colombianas, con rangos típicos de días según protocolos de medicina laboral.
 CIE10_DATABASE: dict[str, dict] = {
     # --- Enfermedades infecciosas ---
+    "A08": {"desc": "Infecciones intestinales virales y otras especificadas (incluye A083)", "dias_min": 1, "dias_max": 3},
     "A09": {"desc": "Diarrea y gastroenteritis de presunto origen infeccioso", "dias_min": 1, "dias_max": 5},
     "A90": {"desc": "Fiebre del dengue (dengue clásico)", "dias_min": 5, "dias_max": 14},
     "A91": {"desc": "Fiebre del dengue hemorrágico", "dias_min": 7, "dias_max": 21},
@@ -120,11 +121,8 @@ class CIE10ValidationTool(BaseTool):
             diagnostico_texto = data.get("diagnostico_texto", "")
 
             # Search by exact match first, then by prefix
-            entry = CIE10_DATABASE.get(codigo)
-            if not entry:
-                # Try prefix match (e.g., "J06.9" -> "J06")
-                prefix = codigo.split(".")[0]
-                entry = CIE10_DATABASE.get(prefix)
+            codigo = codigo.replace(".", "").replace(" ", "")
+            entry = CIE10_DATABASE.get(codigo) or CIE10_DATABASE.get(codigo[:3])
 
             if not entry:
                 return json.dumps({

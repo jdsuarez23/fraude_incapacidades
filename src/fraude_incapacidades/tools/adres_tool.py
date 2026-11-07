@@ -30,6 +30,11 @@ class ADRESVerificationTool(BaseTool):
             if not numero_doc:
                 return json.dumps({"error": "Número de documento vacío"}, ensure_ascii=False)
 
+            from ..mock_registry import tool_response
+            _mock = tool_response("adres", data)
+            if _mock is not None:
+                return _mock
+
             # Map to ADRES type codes
             tipo_map_adres = {
                 "CC": "CC", "CE": "CE", "TI": "TI",

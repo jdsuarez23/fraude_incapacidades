@@ -8,3 +8,4 @@ __pycache__/
 *.log
 docs/md/*
 docs/diagrams/*
+tests/benchmark_cache/

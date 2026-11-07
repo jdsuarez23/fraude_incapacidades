@@ -1,0 +1,100 @@
+.sg-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  z-index: 59;
+}
+
+.sg-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(560px, 100vw);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-bg-deep);
+  border-left: 1px solid var(--line);
+  box-shadow: -12px 0 40px rgba(0, 0, 0, .35);
+  overflow-y: auto;
+}
+
+.sg-drawer iframe {
+  width: 100%;
+  height: 56vh;
+  min-height: 320px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.sg-drawer h3 {
+  margin: 0;
+}
+
+.sg-drop-files {
+  border: 2px dashed var(--ink-14);
+  border-radius: 14px;
+  padding: 22px 16px;
+  text-align: center;
+  width: 100%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sg-drop-files:hover,
+.sg-drop-files.active {
+  border-color: var(--color-accent-500);
+  background: rgba(99, 102, 241, .07);
+}
+
+.sg-doclist {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.sg-docrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--ink-04);
+}
+
+.sg-docrow.invalid {
+  border-color: rgba(239, 68, 68, .5);
+}
+
+.sg-select {
+  background: var(--shade);
+  border: 1px solid var(--ink-14);
+  border-radius: 8px;
+  color: inherit;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: .82rem;
+}
+
+.sg-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: .78rem;
+}
+
+@media (max-width: 700px) {
+  .sg-docrow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
