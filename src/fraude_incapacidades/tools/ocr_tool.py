@@ -8,11 +8,13 @@ import fitz  # PyMuPDF
 from crewai.tools import BaseTool
 import openai
 
+from ..model_config import get_openai_model
+
 
 class PDFForensicExtractTool(BaseTool):
     name: str = "Extraccion Forense y Estructuracion PDF"
     description: str = (
-        "Analiza un archivo PDF de incapacidad médica usando visión artificial (GPT-4o Vision). "
+        "Analiza un archivo PDF de incapacidad médica usando un modelo de visión artificial. "
         "Renderiza las páginas como imágenes de alta resolución y las envía al modelo de visión "
         "para extraer: logos, nombre y documento del paciente, nombre y registro del médico, "
         "EPS/IPS, código CIE-10, días de incapacidad, fechas, y una evaluación visual del documento. "
@@ -89,7 +91,7 @@ class PDFForensicExtractTool(BaseTool):
             else:
                 return json.dumps({"error": f"Formato no soportado: {file_ext}"}, ensure_ascii=False)
 
-            # ── 4. GPT-4o Vision Analysis ──
+            # ── 4. Análisis visual ──
             api_key = os.environ.get("OPENAI_API_KEY", "")
             if not api_key:
                 return json.dumps({"error": "OPENAI_API_KEY no encontrada."}, ensure_ascii=False)
@@ -141,7 +143,7 @@ class PDFForensicExtractTool(BaseTool):
                 })
 
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model=get_openai_model(),
                 messages=[{"role": "user", "content": content_parts}],
                 max_tokens=2000,
                 temperature=0.0
@@ -160,7 +162,7 @@ class PDFForensicExtractTool(BaseTool):
                 structured_data = json.loads(llm_result_text)
             except json.JSONDecodeError:
                 structured_data = {
-                    "error_extraccion_vision": "GPT-4o Vision no devolvió JSON válido.",
+                    "error_extraccion_vision": "El modelo de visión no devolvió JSON válido.",
                     "respuesta_cruda": llm_result_text[:500],
                     "texto_ocr_backup": full_text[:1000]
                 }

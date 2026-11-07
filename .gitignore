@@ -1,8 +1,10 @@
 .venv/
-test/uploads/
+tests/uploads/
 frontend/node_modules/
 __pycache__/.env
 .env
 __pycache__/
 *.pyc
 *.log
+docs/md/*
+docs/diagrams/*

@@ -19,7 +19,7 @@ def test_rethus(tipo, doc):
             page.wait_for_selector("body", timeout=10000)
             
             # Print page content to see selectors
-            with open("test/rethus_page.html", "w", encoding="utf-8") as f:
+            with open("tests/artifacts/rethus_page.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
             
             print("HTML guardado. Saliendo.")
@@ -30,5 +30,5 @@ def test_rethus(tipo, doc):
 
 if __name__ == "__main__":
     import os
-    os.makedirs("test", exist_ok=True)
+    os.makedirs("tests/artifacts", exist_ok=True)
     test_rethus("1", "987654321")

@@ -17,6 +17,7 @@ from .tools.rethus_tool import RETHUSVerificationTool
 from .tools.adres_tool import ADRESVerificationTool
 from .tools.search_tool import OSINTSearchTool
 from .tools.eps_tool import EPSValidationTool
+from .model_config import get_openai_model
 
 def _load_yaml(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
@@ -33,7 +34,7 @@ def _build_agents(cfg: dict) -> Dict[str, Agent]:
     load_dotenv(Path(__file__).resolve().parents[3] / ".env", override=True)
     
     api_key = os.environ.get("OPENAI_API_KEY", "")
-    default_llm = LLM(model="gpt-4o", api_key=api_key) if api_key else None
+    default_llm = LLM(model=get_openai_model(), api_key=api_key) if api_key else None
     
     # Tool instances
     pdf_extract = PDFForensicExtractTool()

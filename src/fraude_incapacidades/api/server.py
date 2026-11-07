@@ -19,7 +19,8 @@ if sys.stderr.encoding and sys.stderr.encoding.lower() != 'utf-8':
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Redirigir stdout/stderr para diagnosticar bloqueos de CrewAI
-log_file = Path(__file__).resolve().parents[3] / "src" / "crewai_debug.log"
+log_file = Path(__file__).resolve().parents[3] / ".venv" / "logs" / "crewai_debug.log"
+log_file.parent.mkdir(parents=True, exist_ok=True)
 sys.stdout = open(log_file, "a", encoding="utf-8", buffering=1)
 sys.stderr = sys.stdout
 
@@ -39,9 +40,6 @@ except ImportError:
                 key, val = line.split("=", 1)
                 os.environ[key.strip()] = val.strip()
 
-# Importamos el Crew para ejecutar la lógica de la IA
-from fraude_incapacidades.crew import crew
-
 app = FastAPI(
     title="Fraude Incapacidades API",
     description="API para procesar certificados médicos usando CrewAI",
@@ -58,7 +56,7 @@ app.add_middleware(
 )
 
 # Ruta donde se guardarán temporalmente los archivos subidos
-UPLOAD_DIR = Path(__file__).resolve().parents[3] / "test" / "uploads"
+UPLOAD_DIR = Path(__file__).resolve().parents[3] / "tests" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -118,14 +116,24 @@ async def analyze_certificate(file: UploadFile = File(...)):
     Retorna un informe estructurado con puntaje, hallazgos, análisis forense y veredicto.
     """
     try:
-        # Guardar archivo temporal en test/uploads/
+        if not os.environ.get("OPENAI_API_KEY", "").strip():
+            return AnalysisResponse(
+                status="error",
+                report=None,
+                raw_report="",
+                error="Configura OPENAI_API_KEY en el archivo .env para analizar documentos.",
+            )
+
+        from fraude_incapacidades.crew import crew
+
+        # Guardar archivo temporal en tests/uploads/
         file_path = UPLOAD_DIR / file.filename
         with open(file_path, "wb") as buffer:
             content = await file.read()
             buffer.write(content)
         
         # Ejecutar el CrewAI con la ruta del archivo
-        result = crew.kickoff(inputs={
+        result = await crew.kickoff_async(inputs={
             "file_path": str(file_path)
         })
         
