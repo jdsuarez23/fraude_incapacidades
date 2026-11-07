@@ -16,6 +16,13 @@ PyMuPDF = "*"
 fastapi = "*"
 uvicorn = "*"
 python-multipart = "*"
+python-dotenv = "*"
+PyYAML = "*"
+openai = "*"
+docx2txt = "*"
+requests = "*"
+duckduckgo-search = "*"
+playwright = "*"
 
 [build-system]
 requires = ["poetry-core"]

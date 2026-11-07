@@ -1,0 +1,233 @@
+{
+  "rethus": {
+    "79000911": {
+      "estado": "activo"
+    },
+    "79001822": {
+      "estado": "activo"
+    },
+    "79002733": {
+      "estado": "activo"
+    },
+    "79003644": {
+      "estado": "activo"
+    },
+    "79004555": {
+      "estado": "activo"
+    },
+    "79005466": {
+      "estado": "activo"
+    },
+    "79006377": {
+      "estado": "activo"
+    },
+    "79007288": {
+      "estado": "activo"
+    },
+    "79008199": {
+      "estado": "activo"
+    },
+    "79009110": {
+      "estado": "activo"
+    },
+    "79010021": {
+      "estado": "activo"
+    },
+    "79010932": {
+      "estado": "activo"
+    },
+    "79011843": {
+      "estado": "activo"
+    },
+    "79012754": {
+      "estado": "activo"
+    },
+    "79013665": {
+      "estado": "activo"
+    },
+    "79014576": {
+      "estado": "activo"
+    },
+    "79015487": {
+      "estado": "activo"
+    },
+    "79016398": {
+      "estado": "inhabilitado"
+    },
+    "79017309": {
+      "estado": "no_encontrado"
+    },
+    "79018220": {
+      "estado": "activo"
+    },
+    "79019131": {
+      "estado": "no_encontrado"
+    },
+    "79020042": {
+      "estado": "activo"
+    },
+    "79020953": {
+      "estado": "activo"
+    },
+    "79021864": {
+      "estado": "activo"
+    },
+    "79022775": {
+      "estado": "no_disponible"
+    },
+    "79023686": {
+      "estado": "activo"
+    },
+    "79024597": {
+      "estado": "activo"
+    },
+    "79025508": {
+      "estado": "activo"
+    },
+    "79026419": {
+      "estado": "activo"
+    },
+    "79027330": {
+      "estado": "activo"
+    }
+  },
+  "adres": {
+    "1000200137": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000200274": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000200411": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000200548": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000200685": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000200822": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000200959": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000201096": {
+      "estado": "inactivo",
+      "eps": "EPS SURA"
+    },
+    "1000201233": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000201370": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000201507": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000201644": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000201781": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000201918": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000202055": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000202192": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000202329": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000202466": {
+      "estado": "activo",
+      "eps": "EPS SANITAS"
+    },
+    "1000202603": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000202740": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000202877": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203014": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203151": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203288": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203425": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203562": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203699": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203836": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    },
+    "1000203973": {
+      "estado": "activo",
+      "eps": "EPS SANITAS"
+    },
+    "1000204110": {
+      "estado": "activo",
+      "eps": "EPS SURA"
+    }
+  },
+  "entidades": {
+    "IPS CLÍNICA SANTA MARTA 2": {
+      "registrada": true
+    },
+    "IPS CLÍNICA SANTA MARTA 3": {
+      "registrada": true
+    },
+    "IPS CLÍNICA SANTA MARTA 4": {
+      "registrada": true
+    },
+    "IPS CLÍNICA SANTA MARTA 1": {
+      "registrada": true
+    },
+    "IPS VIDA TOTAL EXPRESS": {
+      "registrada": false
+    }
+  }
+}

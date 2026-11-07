@@ -1,3 +1,4 @@
+from fraude_incapacidades.crew import crew
 import sys
 from pathlib import Path
 
@@ -11,11 +12,11 @@ try:
 except Exception:
     pass
 
-from fraude_incapacidades.crew import crew
 
 if __name__ == "__main__":
-    # Ruta absoluta al PDF en la carpeta test
-    pdf_path = (Path(__file__).resolve().parents[2] / "test" / "ejemplo_incapacidad.pdf").as_posix()
+    # Ruta absoluta al PDF de ejemplo
+    pdf_path = (Path(__file__).resolve(
+    ).parents[2] / "tests" / "fixtures" / "ejemplo_incapacidad.pdf").as_posix()
     result = crew.kickoff(inputs={
         "file_path": pdf_path
     })

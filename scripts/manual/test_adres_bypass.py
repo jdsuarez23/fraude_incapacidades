@@ -17,7 +17,7 @@ def test_adres3():
             page.evaluate("__doPostBack('btnConsultar', '')")
             page.wait_for_load_state("networkidle", timeout=15000)
             
-            with open("test/adres_page3.html", "w", encoding="utf-8") as f:
+            with open("tests/artifacts/adres_page3.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
             
         except Exception as e:

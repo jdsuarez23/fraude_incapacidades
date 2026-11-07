@@ -12,6 +12,10 @@ class OSINTSearchTool(BaseTool):
     )
 
     def _run(self, query: str) -> str:
+        from ..mock_registry import tool_response
+        _mock = tool_response("osint", {"consulta": query})
+        if _mock is not None:
+            return _mock
         try:
             from duckduckgo_search import DDGS
 

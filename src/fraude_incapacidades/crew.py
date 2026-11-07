@@ -17,24 +17,29 @@ from .tools.rethus_tool import RETHUSVerificationTool
 from .tools.adres_tool import ADRESVerificationTool
 from .tools.search_tool import OSINTSearchTool
 from .tools.eps_tool import EPSValidationTool
+from .model_config import get_openai_model
+
 
 def _load_yaml(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
+
 _BASE = Path(__file__).parent / "config"
 agents_cfg = _load_yaml(_BASE / "agents.yaml")
 tasks_cfg = _load_yaml(_BASE / "tasks.yaml")
 
+
 def _build_agents(cfg: dict) -> Dict[str, Agent]:
     agents: Dict[str, Agent] = {}
-    
+
     from dotenv import load_dotenv
     load_dotenv(Path(__file__).resolve().parents[3] / ".env", override=True)
-    
+
     api_key = os.environ.get("OPENAI_API_KEY", "")
-    default_llm = LLM(model="gpt-4o", api_key=api_key) if api_key else None
-    
+    default_llm = LLM(model=get_openai_model(),
+                      api_key=api_key) if api_key else None
+
     # Tool instances
     pdf_extract = PDFForensicExtractTool()
     cie10_validator = CIE10ValidationTool()
@@ -42,14 +47,14 @@ def _build_agents(cfg: dict) -> Dict[str, Agent]:
     adres_verifier = ADRESVerificationTool()
     osint_search = OSINTSearchTool()
     eps_validator = EPSValidationTool()
-    
+
     # Asignar nuevas herramientas a los roles existentes
     tools_map = {
         "auditor_medico_forense": [pdf_extract, cie10_validator],
         "investigador_osint": [eps_validator, rethus_verifier, adres_verifier, osint_search],
-        "redactor_dictamen": [], 
+        "redactor_dictamen": [],
     }
-    
+
     for name, data in cfg.items():
         agents[name] = Agent(
             role=data.get("role", ""),
@@ -62,19 +67,22 @@ def _build_agents(cfg: dict) -> Dict[str, Agent]:
         )
     return agents
 
+
 def _build_tasks(cfg: dict, agents: Dict[str, Agent]) -> Dict[str, Task]:
     tasks: Dict[str, Task] = {}
     for name, data in cfg.items():
         agent_key = data.get("agent", "")
         agent = agents.get(agent_key)
         if agent is None:
-            raise ValueError(f"Tarea '{name}' referencia agente desconocido '{agent_key}'")
+            raise ValueError(
+                f"Tarea '{name}' referencia agente desconocido '{agent_key}'")
         tasks[name] = Task(
             description=data.get("description", ""),
             agent=agent,
             expected_output=data.get("expected_output", ""),
         )
     return tasks
+
 
 _agents = _build_agents(agents_cfg)
 _tasks = _build_tasks(tasks_cfg, _agents)

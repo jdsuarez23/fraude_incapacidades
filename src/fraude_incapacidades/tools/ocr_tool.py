@@ -8,11 +8,13 @@ import fitz  # PyMuPDF
 from crewai.tools import BaseTool
 import openai
 
+from ..model_config import get_openai_model
+
 
 class PDFForensicExtractTool(BaseTool):
     name: str = "Extraccion Forense y Estructuracion PDF"
     description: str = (
-        "Analiza un archivo PDF de incapacidad médica usando visión artificial (GPT-4o Vision). "
+        "Analiza un archivo PDF de incapacidad médica usando un modelo de visión artificial. "
         "Renderiza las páginas como imágenes de alta resolución y las envía al modelo de visión "
         "para extraer: logos, nombre y documento del paciente, nombre y registro del médico, "
         "EPS/IPS, código CIE-10, días de incapacidad, fechas, y una evaluación visual del documento. "
@@ -49,7 +51,7 @@ class PDFForensicExtractTool(BaseTool):
                     "fecha_modificacion": raw_meta.get("modDate", ""),
                 })
                 for i, page in enumerate(doc):
-                    if i >= 3: break
+                    if i >= 2: break  # Entregable 1: hasta 2 páginas
                     mat = fitz.Matrix(2.0, 2.0)
                     pix = page.get_pixmap(matrix=mat)
                     page_images_b64.append(base64.b64encode(pix.tobytes("png")).decode("utf-8"))
@@ -89,7 +91,7 @@ class PDFForensicExtractTool(BaseTool):
             else:
                 return json.dumps({"error": f"Formato no soportado: {file_ext}"}, ensure_ascii=False)
 
-            # ── 4. GPT-4o Vision Analysis ──
+            # ── 4. Análisis visual ──
             api_key = os.environ.get("OPENAI_API_KEY", "")
             if not api_key:
                 return json.dumps({"error": "OPENAI_API_KEY no encontrada."}, ensure_ascii=False)
@@ -104,7 +106,12 @@ class PDFForensicExtractTool(BaseTool):
                 '  "paciente_nombre": "nombre completo del paciente",\n'
                 '  "paciente_cedula": "número de cédula/documento del paciente",\n'
                 '  "medico_nombre": "nombre completo del médico",\n'
-                '  "medico_cedula": "cédula o registro profesional del médico",\n'
+                '  "medico_cedula": "cédula de ciudadanía del médico",\n'
+                '  "medico_registro_medico": "registro médico (RM) del médico, distinto de su cédula",\n'
+                '  "paciente_tipo_doc": "tipo de documento del paciente (CC, TI, CE, ...), separado del número",\n'
+                '  "consecutivo_incapacidad": "número o consecutivo de la incapacidad",\n'
+                '  "documento_manuscrito": true/false,\n'
+                '  "legibilidad_estimada": número de 0 a 100 (qué tan legible es el documento),\n'
                 '  "eps_o_ips": "nombre de la EPS o IPS que aparece en el documento o logo",\n'
                 '  "codigo_cie10": "código CIE-10 si aparece",\n'
                 '  "diagnostico_texto": "descripción del diagnóstico",\n'
@@ -141,7 +148,7 @@ class PDFForensicExtractTool(BaseTool):
                 })
 
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model=get_openai_model(),
                 messages=[{"role": "user", "content": content_parts}],
                 max_tokens=2000,
                 temperature=0.0
@@ -160,7 +167,7 @@ class PDFForensicExtractTool(BaseTool):
                 structured_data = json.loads(llm_result_text)
             except json.JSONDecodeError:
                 structured_data = {
-                    "error_extraccion_vision": "GPT-4o Vision no devolvió JSON válido.",
+                    "error_extraccion_vision": "El modelo de visión no devolvió JSON válido.",
                     "respuesta_cruda": llm_result_text[:500],
                     "texto_ocr_backup": full_text[:1000]
                 }

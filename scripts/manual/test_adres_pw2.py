@@ -12,7 +12,7 @@ def test_adres2():
             page.goto("https://aplicaciones.adres.gov.co/BDUA_Internet/Pages/ConsultarAfiliadoWeb_2.aspx", timeout=30000)
             page.wait_for_load_state("networkidle")
             
-            with open("test/adres_page2.html", "w", encoding="utf-8") as f:
+            with open("tests/artifacts/adres_page2.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
             print("Guardado en adres_page2.html")
         except Exception as e:

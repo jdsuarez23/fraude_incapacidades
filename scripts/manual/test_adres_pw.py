@@ -11,7 +11,7 @@ def test_adres():
             page.goto("https://servicios.adres.gov.co/BDUA/Consulta-Afiliados-BDUA", timeout=30000)
             page.wait_for_load_state("networkidle")
             
-            with open("test/adres_page.html", "w", encoding="utf-8") as f:
+            with open("tests/artifacts/adres_page.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
             
         except Exception as e:

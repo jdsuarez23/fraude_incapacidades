@@ -1,0 +1,182 @@
+[
+  {
+    "id": "SINT-001",
+    "archivo": "SINT-001.pdf",
+    "tipo": "Manuscrito ilegible",
+    "etiqueta_real": "Ilegible"
+  },
+  {
+    "id": "SINT-002",
+    "archivo": "SINT-002.pdf",
+    "tipo": "Escaneado",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-003",
+    "archivo": "SINT-003.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-004",
+    "archivo": "SINT-004.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-005",
+    "archivo": "SINT-005.pdf",
+    "tipo": "Modificado después de crearse + Illustrator, sin firma",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-006",
+    "archivo": "SINT-006.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-007",
+    "archivo": "SINT-007.pdf",
+    "tipo": "CIE-10 / días fuera de rango",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-008",
+    "archivo": "SINT-008.pdf",
+    "tipo": "Afiliación inactiva + días excesivos",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-009",
+    "archivo": "SINT-009.pdf",
+    "tipo": "Código CIE-10 cambiado (rango compatible)",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-010",
+    "archivo": "SINT-010.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-011",
+    "archivo": "SINT-011.pdf",
+    "tipo": "Escaneado (incapacidad prolongada legítima)",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-012",
+    "archivo": "SINT-012.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-013",
+    "archivo": "SINT-013.pdf",
+    "tipo": "Escaneado sin sello",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-014",
+    "archivo": "SINT-014.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-015",
+    "archivo": "SINT-015.pdf",
+    "tipo": "Metadatos Photoshop",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-016",
+    "archivo": "SINT-016.pdf",
+    "tipo": "Escaneado baja calidad",
+    "etiqueta_real": "Ilegible"
+  },
+  {
+    "id": "SINT-017",
+    "archivo": "SINT-017.pdf",
+    "tipo": "Fechas alteradas + Photoshop",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-018",
+    "archivo": "SINT-018.pdf",
+    "tipo": "Médico inhabilitado + EPS discordante",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-019",
+    "archivo": "SINT-019.pdf",
+    "tipo": "Médico inexistente + Canva",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-020",
+    "archivo": "SINT-020.pdf",
+    "tipo": "Escaneado baja calidad",
+    "etiqueta_real": "Ilegible"
+  },
+  {
+    "id": "SINT-021",
+    "archivo": "SINT-021.pdf",
+    "tipo": "Médico inexistente",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-022",
+    "archivo": "SINT-022.pdf",
+    "tipo": "Error aritmético de fechas",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-023",
+    "archivo": "SINT-023.pdf",
+    "tipo": "IPS apócrifa",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-024",
+    "archivo": "SINT-024.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-025",
+    "archivo": "SINT-025.pdf",
+    "tipo": "Registro médico ajeno (RETHUS caído)",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-026",
+    "archivo": "SINT-026.pdf",
+    "tipo": "Fechas alteradas",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-027",
+    "archivo": "SINT-027.pdf",
+    "tipo": "Fecha alterada y re-escaneada",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-028",
+    "archivo": "SINT-028.pdf",
+    "tipo": "Metadatos Canva + días excesivos",
+    "etiqueta_real": "Adulterado"
+  },
+  {
+    "id": "SINT-029",
+    "archivo": "SINT-029.pdf",
+    "tipo": "Escaneado (cambio de razón social EPS)",
+    "etiqueta_real": "Íntegro"
+  },
+  {
+    "id": "SINT-030",
+    "archivo": "SINT-030.pdf",
+    "tipo": "Nativo digital",
+    "etiqueta_real": "Íntegro"
+  }
+]
