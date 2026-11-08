@@ -13,3 +13,4 @@ docx2txt
 requests
 duckduckgo-search
 playwright
+pydantic

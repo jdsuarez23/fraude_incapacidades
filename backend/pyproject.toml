@@ -23,6 +23,7 @@ docx2txt = "*"
 requests = "*"
 duckduckgo-search = "*"
 playwright = "*"
+pydantic = "*"
 
 [build-system]
 requires = ["poetry-core"]
