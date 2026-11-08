@@ -167,6 +167,23 @@ La API quedará disponible en `http://localhost:8000`.
 
 > Nota: el backend carga las variables desde `backend/.env`. Los logs de diagnóstico del entorno virtual se guardan en `backend/.venv/logs/`.
 
+### Despliegue del backend en Vercel
+
+El backend ya incluye la configuración necesaria para desplegarse como una función serverless de Vercel desde la carpeta `backend/`.
+
+Pasos:
+
+1. En Vercel, importa este repositorio.
+2. En la configuración del proyecto, define el `Root Directory` como `backend`.
+3. Vercel detectará `backend/vercel.json` y la entrada `backend/api/index.py`.
+4. Añade las variables de entorno necesarias en Vercel, por ejemplo:
+   - `OPENAI_API_KEY`
+   - `OPENAI_MODEL` (por ejemplo `gpt-4o`)
+   - `PYTHONPATH=./src` si se requiere en el entorno de despliegue
+5. Haz `Deploy`.
+
+La API quedará expuesta en la URL generada por Vercel, por ejemplo `https://<nombre-del-proyecto>.vercel.app`.
+
 ### 2) Frontend (React / Vite)
 
 En otra terminal:

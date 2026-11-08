@@ -16,6 +16,7 @@ import re
 import asyncio
 import uuid
 import time
+import tempfile
 from pathlib import Path
 
 # Agregar src a sys.path para que no dependa de poetry para encontrar 'fraude_incapacidades'
@@ -30,12 +31,20 @@ if sys.stderr.encoding and sys.stderr.encoding.lower() != 'utf-8':
     sys.stderr = io.TextIOWrapper(
         sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-# Redirigir stdout/stderr para diagnosticar bloqueos de CrewAI
-log_file = Path(__file__).resolve(
-).parents[3] / ".venv" / "logs" / "crewai_debug.log"
-log_file.parent.mkdir(parents=True, exist_ok=True)
-sys.stdout = open(log_file, "a", encoding="utf-8", buffering=1)
-sys.stderr = sys.stdout
+# Redirigir stdout/stderr para diagnosticar bloqueos de CrewAI.
+# En Vercel no siempre existe un filesystem persistente, así que usamos /tmp como fallback.
+try:
+    log_dir = Path(__file__).resolve().parents[3] / ".venv" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "crewai_debug.log"
+    sys.stdout = open(log_file, "a", encoding="utf-8", buffering=1)
+    sys.stderr = sys.stdout
+except OSError:
+    temp_dir = Path(tempfile.gettempdir()) / "fraude_incapacidades"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    log_file = temp_dir / "crewai_debug.log"
+    sys.stdout = open(log_file, "a", encoding="utf-8", buffering=1)
+    sys.stderr = sys.stdout
 
 
 # Cargar variables de entorno desde .env
@@ -68,8 +77,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ruta donde se guardarán temporalmente los archivos subidos
-UPLOAD_DIR = Path(__file__).resolve().parents[3] / "tests" / "uploads"
+# Ruta donde se guardarán temporalmente los archivos subidos.
+# En Vercel se debe usar el directorio temporal de la ejecución; no es seguro escribir en tests/.
+UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", Path(tempfile.gettempdir()) / "fraude_incapacidades" / "uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
