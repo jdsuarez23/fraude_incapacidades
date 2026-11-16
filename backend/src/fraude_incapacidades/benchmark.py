@@ -16,10 +16,17 @@ import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import cast
 
 from . import mock_registry
 from .forensics import analyze_pdf
-from .scoring import PENALTIES, arithmetic_ok, cie10_standard_days, evaluate
+from .domain.scoring import (
+    PENALTIES,
+    RuleSignals,
+    arithmetic_ok,
+    cie10_standard_days,
+    evaluate,
+)
 from .synthetic import ADULTERADO, ILEGIBLE, SYNTH_DIR, generate
 
 UMBRALES_WEB = {"recall_min": 0.75,
@@ -40,43 +47,63 @@ _LABELS = {
 }
 
 
-def extract_fields(pdf_path: Path) -> dict | None:
+def extract_fields(pdf_path: Path) -> dict[str, str | None] | None:
     import fitz
     with fitz.open(pdf_path) as doc:
         text = "\n".join(p.get_text("text") for p in doc)
     if len(text.strip()) < 20:
         return None
-    out = {}
+    out: dict[str, str | None] = {}
     for key, label in _LABELS.items():
         m = re.search(rf"^{re.escape(label)}:\s*(.+)$", text, re.M)
         out[key] = m.group(1).strip() if m else None
     return out
 
 
-def build_signals(pdf_path: Path) -> tuple[dict, dict]:
+def build_signals(pdf_path: Path) -> tuple[RuleSignals, dict[str, object]]:
     """PDF → (señales para el motor de reglas, forense). Sin texto legible ⇒ lectura OCR 0 %."""
-    fz = analyze_pdf(pdf_path, check_signature_region=True)
+    fz = cast(
+        dict[str, object],
+        analyze_pdf(str(pdf_path), check_signature_region=True),
+    )
     campos = extract_fields(pdf_path) if fz["texto_nativo"] else None
     if not campos:
         return {"ocr_confianza": 0}, fz
-    rethus = mock_registry.lookup_rethus(campos["cc_medico"] or "")
-    adres = mock_registry.lookup_adres(campos["cc_paciente"] or "")
-    entidad = mock_registry.lookup_entidad(campos["entidad"] or "")
+    rethus = cast(
+        dict[str, object] | None,
+        mock_registry.lookup_rethus(campos["cc_medico"] or ""),
+    )
+    adres = cast(
+        dict[str, object] | None,
+        mock_registry.lookup_adres(campos["cc_paciente"] or ""),
+    )
+    entidad = cast(
+        dict[str, object] | None,
+        mock_registry.lookup_entidad(campos["entidad"] or ""),
+    )
     try:
-        dias = int(campos["dias"])
+        dias = int(campos["dias"] or "")
     except (TypeError, ValueError):
         dias = None
-    doc = {
+    doc: RuleSignals = {
         "ocr_confianza": 95,
-        "metadatos": fz["estado"],
-        "firma_visible": fz.get("firma_visible", True),
-        "rethus": (rethus or {"estado": "no_encontrado"})["estado"].replace("activo", "verificado"),
+        "metadatos": str(fz["estado"]),
+        "rethus": str(
+            (rethus or {"estado": "no_encontrado"})["estado"]
+        ).replace("activo", "verificado"),
         "osint_ips_apocrifa": bool(entidad and entidad.get("registrada") is False),
-        "adres": (adres or {"estado": "no_disponible"})["estado"],
-        "eps_coincide": None if not adres else (adres["eps"].upper() == (campos["eps"] or "").upper()),
+        "adres": str((adres or {"estado": "no_disponible"})["estado"]),
+        "eps_coincide": None if not adres else (
+            str(adres["eps"]).upper() == (campos["eps"] or "").upper()
+        ),
         "dias_otorgados": dias,
-        "dias_estandar_cie10": cie10_standard_days(campos["cie"]),
+        "dias_estandar_cie10": cie10_standard_days(
+            campos["cie"] if isinstance(campos["cie"], str) else None
+        ),
     }
+    firma_visible = fz.get("firma_visible", True)
+    if isinstance(firma_visible, bool):
+        doc["firma_visible"] = firma_visible
     ar = arithmetic_ok(campos["inicio"], campos["fin"], campos["dias"])
     if ar is not None:
         doc["aritmetica_fechas_ok"] = ar
