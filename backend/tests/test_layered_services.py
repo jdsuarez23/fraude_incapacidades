@@ -80,6 +80,21 @@ class LayeredBackendTests(unittest.TestCase):
 
         self.assertEqual(service.export_pdf({"informe": {}}), b"pdf")
 
+    def test_crewai_crews_are_isolated_and_tasks_have_explicit_context(self):
+        from fraude_incapacidades.crew import build_crew
+
+        first = build_crew()
+        second = build_crew()
+
+        self.assertIsNot(first, second)
+        self.assertEqual(len(first.tasks), 3)
+        self.assertIsNot(first.tasks[0], second.tasks[0])
+        self.assertEqual(first.tasks[1].context, [first.tasks[0]])
+        self.assertEqual(
+            first.tasks[2].context,
+            [first.tasks[0], first.tasks[1]],
+        )
+
     def test_legacy_validation_and_scoring_imports_remain_available(self):
         self.assertTrue(validate_upload("sample.pdf", b"%PDF-").valido)
         self.assertIs(legacy_evaluate, domain_evaluate)

@@ -81,22 +81,49 @@ def _build_tasks(cfg: dict, agents: Dict[str, Agent]) -> Dict[str, Task]:
             agent=agent,
             expected_output=data.get("expected_output", ""),
         )
+
+    required_tasks = (
+        "extract_and_validate_task",
+        "search_and_verify_task",
+        "generate_final_report_task",
+    )
+    missing_tasks = [name for name in required_tasks if name not in tasks]
+    if missing_tasks:
+        raise ValueError(
+            f"Tareas requeridas ausentes: {', '.join(missing_tasks)}")
+
+    tasks["search_and_verify_task"].context = [
+        tasks["extract_and_validate_task"]
+    ]
+    tasks["generate_final_report_task"].context = [
+        tasks["extract_and_validate_task"],
+        tasks["search_and_verify_task"],
+    ]
     return tasks
 
 
-_agents = _build_agents(agents_cfg)
-_tasks = _build_tasks(tasks_cfg, _agents)
+def build_crew(task_callback=None) -> Crew:
+    """Construye una instancia aislada para cada ejecución."""
+    agents = _build_agents(agents_cfg)
+    tasks = _build_tasks(tasks_cfg, agents)
+    return Crew(
+        agents=[
+            agents["auditor_medico_forense"],
+            agents["investigador_osint"],
+            agents["redactor_dictamen"],
+        ],
+        tasks=[
+            tasks["extract_and_validate_task"],
+            tasks["search_and_verify_task"],
+            tasks["generate_final_report_task"],
+        ],
+        process=Process.sequential,
+        task_callback=task_callback,
+        cache=False,
+        memory=False,
+        tracing=False,
+    )
 
-crew = Crew(
-    agents=[
-        _agents["auditor_medico_forense"],
-        _agents["investigador_osint"],
-        _agents["redactor_dictamen"],
-    ],
-    tasks=[
-        _tasks["extract_and_validate_task"],
-        _tasks["search_and_verify_task"],
-        _tasks["generate_final_report_task"],
-    ],
-    process=Process.sequential,
-)
+
+# Compatibilidad con scripts que aún importan `crew`.
+crew = build_crew()
