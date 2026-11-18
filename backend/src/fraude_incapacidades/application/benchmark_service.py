@@ -11,6 +11,9 @@ from fraude_incapacidades.synthetic import (
 
 from .analysis_service import AnalysisService, api_key_error
 from .ports import CrewRunner, PdfAnalysis
+from fraude_incapacidades.infrastructure.pii_redaction import (
+    sanitized_pdf_for_analysis,
+)
 from .report_service import enrich_report, forensic_prompt, parse_crew_result
 from .runtime import CREW_LOCK
 
@@ -149,13 +152,16 @@ async def _run_custom_batch(
                     row = bench.agent_row(item, None, item["error"])
                 else:
                     try:
-                        result = await crew_runner.run(
-                            {
-                                "file_path": str(item["path"]),
-                                "metadatos_forenses": forensic_prompt(item["forense"]),
-                            },
-                            task_callback=None,
-                        )
+                        with sanitized_pdf_for_analysis(Path(item["path"])) as safe_path:
+                            result = await crew_runner.run(
+                                {
+                                    "file_path": str(safe_path),
+                                    "metadatos_forenses": forensic_prompt(
+                                        item["forense"]
+                                    ),
+                                },
+                                task_callback=None,
+                            )
                         report, _raw = parse_crew_result(result)
                         enrich_report(report, item["forense"])
                         row = bench.agent_row(

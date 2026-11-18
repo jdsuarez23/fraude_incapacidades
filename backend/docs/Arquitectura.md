@@ -60,15 +60,24 @@ siguiente fase, sin cambiar ahora su comportamiento.
    `%PDF-` y número máximo de dos páginas. Calcula SHA-256.
 3. El servidor guarda el archivo en el directorio temporal configurado y
    `analyze_pdf` obtiene metadatos y datos forenses deterministas.
-4. El `Crew` ejecuta secuencialmente tres tareas:
+4. Antes de llamar al `Crew`, el servidor crea una copia temporal que elimina
+   identificadores detectables en la capa de texto, metadatos y todas las
+   imágenes. Solo esa copia se entrega al agente y se borra al terminar. Si una
+   página carece de texto nativo (por ejemplo, un escaneo sin OCR), el análisis
+   falla cerrado y no se envía el original.
+5. El `Crew` ejecuta secuencialmente tres tareas:
    - extraer datos del documento y validar CIE-10;
    - contrastar EPS, RETHUS, ADRES y OSINT;
    - redactar el dictamen JSON.
-5. El servidor intenta normalizar la salida JSON, anonimizar ciertos campos
+6. El servidor intenta normalizar la salida JSON, anonimizar ciertos campos
    del paciente y añadir el control del motor de reglas.
-6. La API devuelve el informe directamente o guarda el avance en memoria para
+7. La API devuelve el informe directamente o guarda el avance en memoria para
    que el cliente consulte el trabajo. El informe también se puede exportar a
    PDF.
+
+Como las imágenes se eliminan por privacidad, logos, firmas, sellos y señales
+gráficas no son evaluables por el agente ni se penalizan. Los datos visibles en
+un PDF con texto nativo siguen disponibles para el análisis.
 
 Las rutas de validación técnica no necesitan un LLM. `/api/jobs` y
 `/api/analyze` sí requieren `OPENAI_API_KEY`; el modo agente del laboratorio
@@ -434,10 +443,12 @@ fuente de verdad ni base de datos transaccional.
 
 ## Consideraciones operativas y límites observados
 
-1. **Privacidad:** `_anonymize` transforma los campos estructurados del
-   paciente, pero `_parse_crew_result` también conserva `raw_report` y otros
-   textos generados que podrían contener datos personales. La instrucción de
-   anonimización del prompt no sustituye una sanitización de todas las salidas.
+1. **Privacidad:** los agentes reciben una copia temporal del PDF, no el
+   original. La sanitización cubre identificadores reconocidos en el texto,
+   metadatos e imágenes; el texto nativo no etiquetado puede requerir revisión.
+   Los escaneos sin capa de texto se rechazan hasta configurar OCR local.
+   `_anonymize` sigue protegiendo los campos estructurados del paciente en la
+   respuesta.
 2. **CORS y acceso:** el servidor permite todos los orígenes, métodos y
    encabezados, y no implementa autenticación/autorización en estas rutas.
    Revisar antes de exponerlo a Internet.
@@ -451,9 +462,9 @@ fuente de verdad ni base de datos transaccional.
    navegador y cambios de página pueden impedir verificaciones. El código
    intenta expresar esos casos como pendientes, pero los formatos devueltos por
    herramientas no siempre están uniformados.
-6. **Pruebas automatizadas:** el único archivo Python de pruebas unitarias
-   observado es `test_model_config.py`; no cubre rutas API, reglas, anonimización,
-   procesamiento de archivos ni exactitud del benchmark.
+6. **Pruebas automatizadas:** `test_pii_redaction.py` cubre sanitización,
+   rechazo de escaneos sin OCR y las rutas de análisis que invocan agentes;
+   no valida exactitud de extracción ni del benchmark.
 7. **Datos clínicos:** los días por CIE-10 son una referencia embebida y
    orientativa; no reemplaza juicio médico ni una fuente clínica oficial
    versionada.

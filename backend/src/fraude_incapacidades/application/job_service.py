@@ -7,6 +7,9 @@ from pathlib import Path
 from .ports import CrewRunner
 from .report_service import enrich_report, forensic_prompt, parse_crew_result
 from .runtime import CREW_LOCK
+from fraude_incapacidades.infrastructure.pii_redaction import (
+    sanitized_pdf_for_analysis,
+)
 
 STAGES = [
     {"id": 1, "nombre": "Extracción OCR y Metadatos"},
@@ -70,15 +73,16 @@ async def run_job(job_id: str, crew_runner: CrewRunner) -> None:
                         set_stage(job, 2, "completado", "Fuentes externas consultadas")
                     set_stage(job, 3, "en_curso")
 
-            result = await crew_runner.run(
-                {
-                    "file_path": job["archivo"],
-                    "metadatos_forenses": forensic_prompt(
-                        job["validacion"].get("forense")
-                    ),
-                },
-                task_callback=on_task,
-            )
+            with sanitized_pdf_for_analysis(Path(job["archivo"])) as safe_path:
+                result = await crew_runner.run(
+                    {
+                        "file_path": str(safe_path),
+                        "metadatos_forenses": forensic_prompt(
+                            job["validacion"].get("forense")
+                        ),
+                    },
+                    task_callback=on_task,
+                )
             report, raw = parse_crew_result(result)
             enrich_report(report, job["validacion"].get("forense"))
             job.update(

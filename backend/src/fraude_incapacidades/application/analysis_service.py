@@ -1,6 +1,9 @@
 from pathlib import Path
 
 from fraude_incapacidades.domain.upload_validation import validate_upload
+from fraude_incapacidades.infrastructure.pii_redaction import (
+    sanitized_pdf_for_analysis,
+)
 
 from .ports import CrewRunner, PdfAnalysis, UploadStorage
 from .report_service import (
@@ -66,16 +69,17 @@ class AnalysisService:
             )
 
         try:
-            async with CREW_LOCK:
+            with sanitized_pdf_for_analysis(path) as safe_path:
+                async with CREW_LOCK:
                     result = await self.crew_runner.run(
                         {
-                        "file_path": str(path),
-                        "metadatos_forenses": forensic_prompt(
-                            validation.get("forense")
-                        ),
+                            "file_path": str(safe_path),
+                            "metadatos_forenses": forensic_prompt(
+                                validation.get("forense")
+                            ),
                         },
                         task_callback=None,
-                )
+                    )
             report, raw_text = parse_crew_result(result)
             enrich_report(report, validation.get("forense"))
             return AnalysisResponse(

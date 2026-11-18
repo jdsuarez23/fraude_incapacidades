@@ -225,7 +225,10 @@ def signals_from_report(
         doc["aritmetica_fechas_ok"] = ar
     entidad = _as_mapping(datos.get("entidad"))
     firma = str(entidad.get("firma_sello", "")).lower()
-    if firma:
+    if firma and not any(
+        marker in firma
+        for marker in ("no evaluable", "no disponible", "anonimiz")
+    ):
         doc["firma_visible"] = not (
             "ausente" in firma or "no legible" in firma)
     return doc

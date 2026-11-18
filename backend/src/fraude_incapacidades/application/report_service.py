@@ -157,12 +157,10 @@ def forensic_prompt(forense: object | None) -> str:
         return "No disponible"
     keys = (
         "estado",
-        "creador",
-        "productor",
+        "editor_detectado",
         "fecha_creacion",
         "fecha_modificacion",
         "dias_entre_creacion_y_modificacion",
-        "alertas",
     )
     return json.dumps(
         {key: forense_data.get(key) for key in keys}, ensure_ascii=False

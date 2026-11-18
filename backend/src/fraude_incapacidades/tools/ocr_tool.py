@@ -100,7 +100,12 @@ class PDFForensicExtractTool(BaseTool):
 
             vision_prompt = (
                 "Eres un perito forense especialista en documentos médicos colombianos. "
-                "Analiza visualmente este certificado de incapacidad médica.\n\n"
+                "Analiza este certificado de incapacidad médica anonimizado. "
+                "El sistema ocultó identificadores directos y eliminó todas las imágenes "
+                "antes de enviarlo; por ello no puedes evaluar logos, firmas, sellos ni "
+                "alteraciones que solo serían visibles en imágenes. No infieras fraude ni "
+                "ausencia por esos elementos. Extrae EPS/IPS solo del texto visible y "
+                "responde 'No evaluable por anonimización' para logo, firma y sello.\n\n"
                 "EXTRAE la siguiente información en formato JSON estricto:\n"
                 "{\n"
                 '  "paciente_nombre": "nombre completo del paciente",\n'
@@ -112,18 +117,17 @@ class PDFForensicExtractTool(BaseTool):
                 '  "consecutivo_incapacidad": "número o consecutivo de la incapacidad",\n'
                 '  "documento_manuscrito": true/false,\n'
                 '  "legibilidad_estimada": número de 0 a 100 (qué tan legible es el documento),\n'
-                '  "eps_o_ips": "nombre de la EPS o IPS que aparece en el documento o logo",\n'
+                '  "eps_o_ips": "nombre de la EPS o IPS que aparece en el texto",\n'
                 '  "codigo_cie10": "código CIE-10 si aparece",\n'
                 '  "diagnostico_texto": "descripción del diagnóstico",\n'
                 '  "dias_incapacidad": número de días,\n'
                 '  "fecha_inicio": "fecha de inicio de la incapacidad",\n'
                 '  "fecha_fin": "fecha fin de la incapacidad",\n'
-                '  "logo_detectado": "descripción del logo que ves (ej: Logo de Sanitas, Logo de Sura, etc.)",\n'
-                '  "tiene_firma": true/false,\n'
-                '  "tiene_sello": true/false,\n'
+                '  "logo_detectado": "No evaluable por anonimización",\n'
+                '  "tiene_firma": "No evaluable por anonimización",\n'
+                '  "tiene_sello": "No evaluable por anonimización",\n'
                 '  "evaluacion_visual": "tu evaluación profesional del aspecto visual del documento: '
-                '¿parece un formato institucional real? ¿El logo corresponde a la EPS/IPS mencionada? '
-                '¿Hay señales de edición visual (parches, texto superpuesto, alineación rota)?"\n'
+                'indica que no es evaluable porque las imágenes se eliminaron por privacidad"\n'
                 "}\n\n"
                 "Si no puedes leer algún dato, escribe 'No legible' o 'No presente'.\n"
                 "Responde SOLAMENTE el JSON, sin markdown ni preámbulos."
